@@ -1,0 +1,34 @@
+[
+    {
+        "name": "created_at",
+        "type": "STRING"
+    },
+    {
+        "name": "customer_id",
+        "type": "INTEGER"
+    },
+    {
+        "name": "description",
+        "type": "STRING"
+    },
+    {
+        "name": "id",
+        "type": "INTEGER"
+    },
+    {
+        "name": "object_class",
+        "type": "STRING"
+    },
+    {
+        "name": "object_id",
+        "type": "INTEGER"
+    },
+    {
+        "name": "source",
+        "type": "STRING"
+    },
+    {
+        "name": "verb",
+        "type": "STRING"
+    }
+]
