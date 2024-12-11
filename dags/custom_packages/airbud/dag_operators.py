@@ -8,39 +8,37 @@ from logging import getLogger
 log = getLogger(__name__)
 
 def ingest_data(
-    project_id: str,
-    dataset_name: str,
-    base_url: str,
-    headers: dict,
-    bucket_name: str,
-    endpoint: str,
-    destination_blob_name: dict,
-    bigquery_metadata: dict,
+    ingestion_metadata: dict, # Metadata for ingestion
+    endpoint: str,  # API endpoint
+    endpoint_kwargs: dict, # Endpoint-specific arguments
     paginate=False,    # Initialize pagination flag
-    **kwargs
+    pagination_args=None,  # Initialize pagination arguments
 ):
     """
     Ingest data from a Recharge API endpoint into Google Cloud Storage and BigQuery.
-
-   	**kwargs:
-		jsonl_path (str): The path to the JSON data within the response.
-		params (dict): The query parameters for the request.
-		data (dict): The request body data.
-		json_data (dict): The JSON data to send with the request.
-		pagination_args (dict): The pagination arguments for the request.
     """
-    log.info(f"Ingesting data from {dataset_name}'s {endpoint} endpoint.")
-    # Set up variables for specific endpoint
-    url = f"{base_url}{endpoint}"
+    # Parse arguments
+    ## Table Destination
+    project_id = ingestion_metadata.get("project_id", "quip-de-raw-dev")
+    dataset_name = ingestion_metadata.get("dataset_name", "airflow")
+    table_name = endpoint
+    bigquery_metadata = endpoint_kwargs.get("bigquery_metadata")
+    ## API Endpoint
+    url = ingestion_metadata.get("base_url") + endpoint
+    jsonl_path = endpoint_kwargs.get("jsonl_path", None)
+    params = endpoint_kwargs.get("params", None)
+    data = endpoint_kwargs.get("data", None)
+    json_data = endpoint_kwargs.get("json_data", None)
+    headers = endpoint_kwargs.get("headers", ingestion_metadata.get("headers"))
+    ## GCS Destination
+    bucket_name = ingestion_metadata.get("gcs_bucket_name", "airflow_outputs")
     bucket_path = f"get/{dataset_name}/{endpoint}"
-    jsonl_path = kwargs.get("jsonl_path", None)
-    params = kwargs.get("params", None)
-    data = kwargs.get("data", None)
-    json_data = kwargs.get("json_data", None)
+    destination_blob_name = endpoint_kwargs.get("destination_blob_name")
 
+
+    log.info(f"Ingesting data from {dataset_name}'s {endpoint} endpoint.")
     # Get data
     if paginate:
-        pagination_args = kwargs.get("pagination_args", None)
         log.info("Paginating data...")
         records = paginate_responses(url, headers, jsonl_path, params, data, json_data, pagination_args)
     else:

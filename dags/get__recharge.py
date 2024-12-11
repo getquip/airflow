@@ -5,27 +5,28 @@ from airflow.models import Variable
 from dags.custom_packages import airbud
 
 # Define constants
-# from Airflow Variables
-PROJECT_ID = "quip-dw-raw-dev" #Variable.get("project_id")
-GCS_BUCKET_NAME = "airflow_ourputs" #Variable.get("GCS_OUTPUT_BUCKET_NAME")
-## All-caps variables are constants needed for every ingestion pipeline.
-## Lowercase variables are specific to this pipeline.
-BQ_DATASET_NAME = "recharge"
+DATA_SOURCE_NAME = "recharge"
+INGESTION_METADATA = {
+    "project_id": "quip-dw-raw-dev", #Variable.get("project_id")
+    "dataset_name": DATA_SOURCE_NAME,
+    "base_url": "https://api.rechargeapps.com/",
+    "gcs_bucket_name": "airflow_outputs", #Variable.get("GCS_OUTPUT_BUCKET_NAME")
+}
+
 SECRET_PREFIX = "api__"
-recharge_api_key = airbud.get_secrets(PROJECT_ID, BQ_DATASET_NAME, SECRET_PREFIX)['api_key']
-HEADERS = {
-    "X-Recharge-Access-Token": recharge_api_key,
+API_KEY = airbud.get_secrets(Variable.get("project_id"), DATA_SOURCE_NAME, SECRET_PREFIX)['api_key']
+INGESTION_METADATA["headers"] = {
+    "X-Recharge-Access-Token": API_KEY,
     "X-Recharge-Version": "2021-11"
 }
-BASE_URL = "https://api.rechargeapps.com/"
 # Pagination constants
-pagination_args = {
+PAGINATION_ARGS = {
     "pagination_key": "next_cursor",
     "pagination_query":"page_info"
 }
 
 # Postman Collection: https://quipdataeng.postman.co/workspace/quip_data_eng~9066eadd-c088-4794-8fc6-2774ed80218c/collection/39993065-1e67e281-3311-4b9e-b207-d5154c7339cf?action=share&creator=39993065
-endpoint_kwargs = {
+ENDPOINT_KWARGS = {
     "events": {
         "jsonl_path": "events",
         "params": {"limit": 250},
@@ -67,7 +68,6 @@ endpoint_kwargs = {
     },
 }
 
-
 # Define the DAG
 default_args = {
     "owner": "ammie",
@@ -87,51 +87,18 @@ with DAG(
     max_active_runs=1,
 ) as dag:
 
-# Define tasks
-
-    task = PythonOperator(
-        task_id=f"process_events_data",
-        python_callable=airbud.ingest_data,
-        op_kwargs={
-            "endpoint": "events",
-            "project_id": PROJECT_ID,
-            "bucket_name": GCS_BUCKET_NAME,
-            "dataset_name": BQ_DATASET_NAME,
-            "params": endpoint_kwargs.get("events")["params"],
-            "jsonl_path": endpoint_kwargs.get("events")["jsonl_path"],
-            "pagination_args": pagination_args,
-            "destination_blob_name": endpoint_kwargs.get("events")["destination_blob_name"],
-        },
-        dag=dag,
-    )
-
-
-
-
-
-
-airbud.ingest_data(
-    project_id='quip-dw-raw-dev',
-    dataset_name='recharge',
-    base_url= BASE_URL,
-    headers= HEADERS,
-    bucket_name= GCS_BUCKET_NAME,
-    endpoint= "events",
-    jsonl_path = "events",
-    destination_blob_name = endpoint_kwargs.get("events")["destination_blob_name"],    
-    paginate=False,    # Initialize pagination flag
-    params=endpoint_kwargs.get("events")["params"],
-    pagination_args=pagination_args
-)
-
-project_id='quip-dw-raw-dev'
-dataset_name='recharge'
-base_url= BASE_URL
-headers= HEADERS
-bucket_name= GCS_BUCKET_NAME
-endpoint= "events"
-jsonl_path = "events"
-destination_blob_name = endpoint_kwargs.get("events")["destination_blob_name"],   
-paginate=False,   # Initialize pagination flag
-params=endpoint_kwargs.get("events")["params"]
-pagination_args=pagination_args
+# Define tasks and run them all in parallel
+    tasks = []
+    for endpoint in ENDPOINT_KWARGS.keys():
+        task = PythonOperator(
+            task_id=f"ingesting_data_from_{endpoint}_endpoint", 
+            python_callable=airbud.ingest_data,
+            op_kwargs={
+                "ingestion_metadata": INGESTION_METADATA,
+                "endpoint": endpoint,  
+                "endpoint_kwargs": ENDPOINT_KWARGS.get(endpoint),
+                "paginate": True,   
+                "pagination_args": PAGINATION_ARGS
+            },
+            dag=dag
+        )

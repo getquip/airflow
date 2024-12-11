@@ -113,7 +113,7 @@ def upload_to_bigquery(
                 if errors:
                     print(f"Encountered errors while inserting rows: {errors}")
                     break
-            print(f"Successfully inserted {len(chunk)} rows into {endpoint}.")
+            print(f"Successfully inserted {len(records)} rows into {endpoint}.")
             break
         except Exception as e:
             if attempt == max_retries - 1:

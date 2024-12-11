@@ -41,9 +41,6 @@ def paginate_responses(
 ) -> List[Dict]:
     """
     Paginate through the API endpoint.
-
-    Returns:
-        List[Dict]: A list of JSON objects from the API responses.
     """
     # Unpack pagination arguments
     pagination_key = pagination_args.get("pagination_key")
