@@ -2,7 +2,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
-from dags.custom_packages import airbud
+from dags.plugins import airbud
 
 # Define constants
 DATA_SOURCE_NAME = "recharge"

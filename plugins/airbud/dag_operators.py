@@ -1,8 +1,8 @@
 
-from dags.custom_packages.airbud.get_data import *
-from dags.custom_packages.airbud.post_to_bigquery import *
-from dags.custom_packages.airbud.post_to_gcs import *
-from dags.custom_packages.airbud.get_secrets import *
+from dags.plugins.airbud.get_data import *
+from dags.plugins.airbud.post_to_bigquery import *
+from dags.plugins.airbud.post_to_gcs import *
+from dags.plugins.airbud.get_secrets import *
 from logging import getLogger
 
 log = getLogger(__name__)
