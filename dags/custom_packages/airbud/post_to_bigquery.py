@@ -105,13 +105,16 @@ def upload_to_bigquery(
     max_retries=3
     for attempt in range(max_retries):
         try:
-            # Insert the JSON data as rows into BigQuery
-            errors = client.insert_rows_json(table_ref, records)
-            if errors:
-                print(f"Encountered errors while inserting rows: {errors}")
-            else:
-                print(f"Successfully inserted {len(records)} rows into {endpoint}.")
-                break
+            # Insert data in chunks -- insert limit is 10,000 rows
+            chunk_size = 8000
+            for i in range(0, len(records), chunk_size):
+                chunk = records[i:i + chunk_size]
+                errors = client.insert_rows_json(table_ref, chunk)
+                if errors:
+                    print(f"Encountered errors while inserting rows: {errors}")
+                    break
+            print(f"Successfully inserted {len(chunk)} rows into {endpoint}.")
+            break
         except Exception as e:
             if attempt == max_retries - 1:
                 raise RuntimeError(f"Table {endpoint} not found after {max_retries} retries.")
