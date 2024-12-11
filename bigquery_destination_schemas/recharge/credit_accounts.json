@@ -13,7 +13,7 @@
     },
     {
         "name": "created_at",
-        "type": "STRING"
+        "type": "TIMESTAMP"
     },
     {
         "name": "currency_code",
@@ -21,7 +21,7 @@
     },
     {
         "name": "expires_at",
-        "type": "STRING"
+        "type": "TIMESTAMP"
     },
     {
         "name": "initial_value",
@@ -37,6 +37,6 @@
     },
     {
         "name": "updated_at",
-        "type": "STRING"
+        "type": "TIMESTAMP"
     }
 ]

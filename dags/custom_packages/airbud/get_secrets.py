@@ -1,24 +1,22 @@
 from google.cloud import secretmanager
 import json
+from typing import Dict
 
-def get_secrets(PROJECT_ID, BQ_DATASET_NAME,SECRETS_PREFIX, version_id="latest"):
+def get_secrets(
+        project_id: str, # GCP project ID where the secret is stored
+        dataset_name: str, # Used to construct the secret name
+        prefix: str, # Used to construct the secret name
+        version_id="latest"
+) -> str:
     """
     Access a secret from Google Cloud Secret Manager.
-    
-    Args:
-        PROJECT_ID (str): GCP project ID where the secret is stored.
-        secret_id (str): The ID of the secret to access.
-        version_id (str, optional): The version of the secret. Defaults to "latest".
-
-    Returns:
-        str: The secret payload as a string.
     """
     try:
         # Create the Secret Manager client
         client = secretmanager.SecretManagerServiceClient()
         
         # Build the name of the secret version
-        secret_name = f"projects/{PROJECT_ID}/secrets/{SECRETS_PREFIX}{BQ_DATASET_NAME}/versions/{version_id}"
+        secret_name = f"projects/{project_id}/secrets/{prefix}{dataset_name}/versions/{version_id}"
         
         # Access the secret version
         response = client.access_secret_version(name=secret_name)

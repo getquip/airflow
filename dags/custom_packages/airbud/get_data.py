@@ -1,16 +1,16 @@
 import requests
 import json
+from typing import Dict, List
 
-def get_data(url, headers, params, data, json_data):
+def get_data(
+        url: str, # The URL of the API endpoint
+        headers: dict, # The request headers
+        params: dict, # The query parameters for the request, if any
+        data: dict, # The request body data, if any
+        json_data: dict # The JSON data to send with the request, if any
+) -> Dict:
     """
     Get data from an API endpoint.
-
-    Args:
-        url (str): The url of the API endpoint.
-        headers (dict): The request headers.
-        params (dict): The query parameters for the request.
-        data (dict): The request body data.
-        json_data (dict): The JSON data to send with the request.
 
     Returns:
         dict: The JSON response from the API.
@@ -30,9 +30,20 @@ def get_data(url, headers, params, data, json_data):
     response.raise_for_status()
     return response
 
-def paginate_responses(url, headers, jsonl_path, params, data, json_data, pagination_args):
+def paginate_responses(
+        url: str, # The URL of the API endpoint
+        headers: str, # The request headers
+        jsonl_path: str, # The path to the JSON data within the API response
+        params: dict, # The query parameters for the request, if any
+        data: dict, # The request body data, if any
+        json_data: dict, # The JSON data to send with the request, if any
+        pagination_args: dict # The pagination arguments for the request
+) -> List[Dict]:
     """
     Paginate through the API endpoint.
+
+    Returns:
+        List[Dict]: A list of JSON objects from the API responses.
     """
     # Unpack pagination arguments
     pagination_key = pagination_args.get("pagination_key")

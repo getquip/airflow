@@ -1,23 +1,24 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from providers import airbud
 from airflow.models import Variable
+from dags.custom_packages import airbud
 
 # Define constants
+# from Airflow Variables
+PROJECT_ID = "quip-dw-raw-dev" #Variable.get("project_id")
+GCS_BUCKET_NAME = "airflow_ourputs" #Variable.get("GCS_OUTPUT_BUCKET_NAME")
 ## All-caps variables are constants needed for every ingestion pipeline.
 ## Lowercase variables are specific to this pipeline.
 BQ_DATASET_NAME = "recharge"
 SECRET_PREFIX = "api__"
-recharge_api_key = airbud.get_secrets(BQ_DATASET_NAME, SECRET_PREFIX)['api_key']
+recharge_api_key = airbud.get_secrets(PROJECT_ID, BQ_DATASET_NAME, SECRET_PREFIX)['api_key']
 HEADERS = {
     "X-Recharge-Access-Token": recharge_api_key,
     "X-Recharge-Version": "2021-11"
 }
 BASE_URL = "https://api.rechargeapps.com/"
-PROJECT_ID = Variable.get("project_id")
-GCS_BUCKET_NAME = Variable.get("GCS_OUTPUT_BUCKET_NAME")
-# Define pagination constants
+# Pagination constants
 pagination_args = {
     "pagination_key": "next_cursor",
     "pagination_query":"page_info"
@@ -31,6 +32,11 @@ endpoint_kwargs = {
         "destination_blob_name": {
             "dag_run_date": "{{ ds }}",
             "date_range": "created_at"
+        },
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", # DAY, MONTH, YEAR
+            "partitioning_field": "created_at",
+            "clustering_fields": ["object_type", "verb", "customer_id", "id"]
         }
     },
     "credit_accounts": {
@@ -39,6 +45,11 @@ endpoint_kwargs = {
         "destination_blob_name": {
             "dag_run_date": "{{ ds }}",
             "date_range": "updated_at"
+        },
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", # DAY, MONTH, YEAR
+            "partitioning_field": "updated_at",
+            "clustering_fields": ["name", "type", "customer_id", "id"]
         }
     },
     "credit_adjustments": {
@@ -47,9 +58,15 @@ endpoint_kwargs = {
         "destination_blob_name": {
             "dag_run_date": "{{ ds }}",
             "date_range": "updated_at"
+        },
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", # DAY, MONTH, YEAR
+            "partitioning_field": "updated_at",
+            "clustering_fields": ["type", "credit_account_id", "id"]
         }
     },
 }
+
 
 # Define the DAG
 default_args = {
@@ -82,8 +99,39 @@ with DAG(
             "dataset_name": BQ_DATASET_NAME,
             "params": endpoint_kwargs.get("events")["params"],
             "jsonl_path": endpoint_kwargs.get("events")["jsonl_path"],
-            "paginations_args": paginations_args,
+            "pagination_args": pagination_args,
             "destination_blob_name": endpoint_kwargs.get("events")["destination_blob_name"],
         },
         dag=dag,
     )
+
+
+
+
+
+
+airbud.ingest_data(
+    project_id='quip-dw-raw-dev',
+    dataset_name='recharge',
+    base_url= BASE_URL,
+    headers= HEADERS,
+    bucket_name= GCS_BUCKET_NAME,
+    endpoint= "events",
+    jsonl_path = "events",
+    destination_blob_name = endpoint_kwargs.get("events")["destination_blob_name"],    
+    paginate=False,    # Initialize pagination flag
+    params=endpoint_kwargs.get("events")["params"],
+    pagination_args=pagination_args
+)
+
+project_id='quip-dw-raw-dev'
+dataset_name='recharge'
+base_url= BASE_URL
+headers= HEADERS
+bucket_name= GCS_BUCKET_NAME
+endpoint= "events"
+jsonl_path = "events"
+destination_blob_name = endpoint_kwargs.get("events")["destination_blob_name"],   
+paginate=False,   # Initialize pagination flag
+params=endpoint_kwargs.get("events")["params"]
+pagination_args=pagination_args

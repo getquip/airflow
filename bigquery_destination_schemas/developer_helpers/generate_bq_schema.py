@@ -18,12 +18,31 @@ def infer_schema_from_json(json_data):
         # Check the data type of the value and map it to BigQuery type
         field_type = infer_field_type(json_data, key)
         
-        # Add the inferred schema field to the list
-        schema.append(bigquery.SchemaField(key, field_type))
-    
+        # If the field_type is a RECORD, parse again to get the nested schema
+        if field_type == "RECORD":
+            sub_schema = []
+            for subkey in json_data[0][key].keys():
+                sub_field_type = infer_field_type(json_data, key, subkey)
+                sub_field = {
+                    "name": subkey,
+                    "type": sub_field_type
+                }
+                sub_schema.append(sub_field)
+            field = {
+                "name": key,
+                "type": field_type,
+                "fields": sub_schema
+            }
+        else:
+            field = {
+                "name": key,
+                "type": field_type
+            }
+        schema.append(field)
     return schema
 
-def infer_field_type(json_data, key):
+
+def infer_field_type(json_data, key, subkey=None):
     """
     Infer the BigQuery field type based on the values in the JSON data for a given key.
 
@@ -32,10 +51,15 @@ def infer_field_type(json_data, key):
         key (str): The key to infer the type for.
 
     Returns:
-        str: The corresponding BigQuery field type.
+        string: The corresponding BigQuery field type 
     """
-    field_values = [item.get(key) for item in json_data]
-    
+    if subkey:
+        field_values = [item.get(key).get(subkey) for item in json_data]
+    else:
+        field_values = [item.get(key) for item in json_data]
+    # If all values are None or empty, default to STRING type
+    if not any(val is not None for val in field_values):
+        return "STRING"
     # Infer the field type based on the types of the values in the JSON data
     if all(isinstance(val, int) for val in field_values if val is not None):
         return "INTEGER"
@@ -46,13 +70,18 @@ def infer_field_type(json_data, key):
     elif all(isinstance(val, bool) for val in field_values if val is not None):
         return "BOOLEAN"
     elif all(isinstance(val, dict) for val in field_values if val is not None):
-        return "RECORD"  # BigQuery nested structures (repeated fields or records)
+        # If it's a dictionary, treat it as a RECORD type and infer nested schema
+        return "RECORD"  # Return the nested schema for RECORD
     elif all(isinstance(val, list) for val in field_values if val is not None):
-        return "STRING"  # Assuming it's a list of strings for simplicity; handle lists properly if needed
+        print(f"Warning: List type detected for key '{key}'. Inferring as STRING...Manually check if this needs to be updated to mode: REPEATED")
+        return "STRING"
     elif all(isinstance(val, (str, float, int)) for val in field_values if val is not None):
-        return "STRING"  # Can be improved by more sophisticated detection for mixed types (e.g., timestamps)
+        return "STRING"  # Mixed types default to STRING
     else:
         return "STRING"  # Default type if we can't infer it
+
+
+
 
 # MANUALLY RUN HERE
 # Set the JSON data to generate the schema from
@@ -74,16 +103,9 @@ json_data = [ # Example JSON data
 # Generate BigQuery schema from the JSON data
 schema = infer_schema_from_json(json_data)
 
-# Print the generated schema
-for field in schema:
-    print(f"Field: {field.name}, Type: {field.field_type}")
-
-# Convert SchemaField objects to a serializable format (e.g., dictionary)
-schema_dict = [{"name": field.name, "type": field.field_type} for field in schema]
-
 # Write the schema to a text file in JSON format
 dataset_name = "recharge"
-table_name = "credit_accounts"
+table_name = "events"
 with open(f"bigquery_destination_schemas/{dataset_name}/{table_name}.json", "w") as file:
-    json.dump(schema_dict, file, indent=4)
+    json.dump(schema, file, indent=4)
 

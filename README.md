@@ -7,7 +7,7 @@
    
    Run the following command in your terminal to set up a virtual environment:  
    ```bash
-   python3 -m venv venv
+   python3.9 -m venv venv
    ```
 
 2. **Activate the Virtual Environment**  
