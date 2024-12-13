@@ -1,0 +1,38 @@
+name: Sync to syncGCS Bucket
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  sync-to-gcs:
+    name: Sync Repository to Airflow Composer GCS
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    - name: Authenticate with GCP
+      run: gcloud auth activate-service-account --key-file=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    - name: Install gsutil
+      run: |
+        sudo apt-get update && sudo apt-get install -y google-cloud-sdk
+
+    - name: Sync repository to GCS bucket
+      run: |
+        gsutil -m rsync -r ./ gs://${{ secrets.GCS_BUCKET_NAME }}
+
+    - name: Verify upload
+      run: |
+        echo "Listing files in the GCS bucket..."
+        gsutil ls gs://${{ secrets.GCS_BUCKET_NAME }}
