@@ -2,6 +2,7 @@ import requests
 import json
 from typing import Dict, List
 from airflow.models import Variable
+import time
 
 def get_data(
         url: str, # The URL of the API endpoint
@@ -26,9 +27,6 @@ def get_data(
         data=data,
         json=json_data
     )
-    
-    # Raise an error if the response status code is not 2xx
-    response.raise_for_status()
     return response
 
 def paginate_responses(
@@ -57,6 +55,14 @@ def paginate_responses(
     while True:
         # Fetch data using get_data function
         response = get_data(url, headers, params, data, json_data)
+        # Check for Rate Limiting
+        if response.status_code == 429:
+            for i in range(6):
+                print(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
+                time.sleep(10)
+                response = get_data(url, headers, params, data, json_data)
+                if response.status_code != 429:
+                    break
         response_json = response.json()
         if jsonl_path:
             records.extend(response_json.get(jsonl_path))

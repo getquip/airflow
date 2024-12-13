@@ -42,18 +42,20 @@ def ingest_data(
         log.info("Paginating data...")
         records, last_page = paginate_responses(url, headers, jsonl_path, params, data, json_data, pagination_args)
     else:
-        # Fetch data using get_data function
         response = get_data(url, headers, params, json_data, data)
         response_json = response.json()
-        # Parse data (select specific path if jsonl_path is provided)
+        # Parse data (select specific path
         records = response_json if jsonl_path is None else response_json.get(jsonl_path)
     log.info(f"Completed data fetch...")
+    
     # Upload raw data to GCS
     upload_json_to_gcs(project_id, records, bucket_name, bucket_path, destination_blob_name)
     log.info(f"Uploaded data to GCS...")
+    
     # Land data in BigQuery
     upload_to_bigquery(project_id, dataset_name, endpoint, bigquery_metadata, records)
     log.info(f"Completed data ingestion for {dataset_name}'s {endpoint} endpoint.")
+    
     # Save last page for next run, if applicable
     if paginate:
         store_bookmark_for_next_page(url, last_page)
