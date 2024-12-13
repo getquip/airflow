@@ -1,6 +1,7 @@
 import requests
 import json
 from typing import Dict, List
+from airflow.models import Variable
 
 def get_data(
         url: str, # The URL of the API endpoint
@@ -37,7 +38,7 @@ def paginate_responses(
         params: dict, # The query parameters for the request, if any
         data: dict, # The request body data, if any
         json_data: dict, # The JSON data to send with the request, if any
-        pagination_args: dict # The pagination arguments for the request
+        pagination_args: dict# The pagination arguments for the request
 ) -> List[Dict]:
     """
     Paginate through the API endpoint.
@@ -46,6 +47,13 @@ def paginate_responses(
     pagination_key = pagination_args.get("pagination_key")
     pagination_query = pagination_args.get("pagination_query")
     records = []
+
+    # Initialize last page
+    try:
+        next_page = Variable.get(url)
+        params, json_data, data = get_next_page_query(params, json_data, data, pagination_query, next_page)
+    except:
+        print("No next page stored. Starting pagination from the beginning.")
     while True:
         # Fetch data using get_data function
         response = get_data(url, headers, params, data, json_data)
@@ -58,13 +66,24 @@ def paginate_responses(
         next_page = response_json.get(pagination_key)
         if next_page:
             print(f"Fetching next page of data...{next_page}")
-            if params:
-                params[pagination_query] = next_page
-            elif json_data:
-                json_data[pagination_query] = next_page
-            elif data:
-                data[pagination_query] = next_page
+            params, json_data, data = get_next_page_query(params, json_data, data, pagination_query, next_page)
+            last_page = next_page
         else:
             print("No more data to fetch.")
             break
-    return records
+    return records, last_page
+
+
+# create next run variable if upload to bigquery is successful
+def store_bookmark_for_next_page(url, next_page):
+        Variable.set(url, next_page)
+        print(f"Next page saved as Airflow Variable.")
+
+def get_next_page_query(params, json_data, data, pagination_query, next_page):
+    if params:
+        params[pagination_query] = next_page
+    elif json_data:
+        json_data[pagination_query] = next_page
+    elif data:
+        data[pagination_query] = next_page
+    return params, json_data, data

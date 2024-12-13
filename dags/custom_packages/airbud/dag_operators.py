@@ -1,8 +1,7 @@
 
-from dags.plugins.airbud.get_data import *
-from dags.plugins.airbud.post_to_bigquery import *
-from dags.plugins.airbud.post_to_gcs import *
-from dags.plugins.airbud.get_secrets import *
+from custom_packages.airbud.get_data import *
+from custom_packages.airbud.post_to_bigquery import *
+from custom_packages.airbud.post_to_gcs import *
 from logging import getLogger
 
 log = getLogger(__name__)
@@ -23,6 +22,7 @@ def ingest_data(
     dataset_name = ingestion_metadata.get("dataset_name", "airflow")
     table_name = endpoint
     bigquery_metadata = endpoint_kwargs.get("bigquery_metadata")
+
     ## API Endpoint
     url = ingestion_metadata.get("base_url") + endpoint
     jsonl_path = endpoint_kwargs.get("jsonl_path", None)
@@ -30,17 +30,17 @@ def ingest_data(
     data = endpoint_kwargs.get("data", None)
     json_data = endpoint_kwargs.get("json_data", None)
     headers = endpoint_kwargs.get("headers", ingestion_metadata.get("headers"))
+
     ## GCS Destination
     bucket_name = ingestion_metadata.get("gcs_bucket_name", "airflow_outputs")
     bucket_path = f"get/{dataset_name}/{endpoint}"
     destination_blob_name = endpoint_kwargs.get("destination_blob_name")
 
-
     log.info(f"Ingesting data from {dataset_name}'s {endpoint} endpoint.")
     # Get data
     if paginate:
         log.info("Paginating data...")
-        records = paginate_responses(url, headers, jsonl_path, params, data, json_data, pagination_args)
+        records, last_page = paginate_responses(url, headers, jsonl_path, params, data, json_data, pagination_args)
     else:
         # Fetch data using get_data function
         response = get_data(url, headers, params, json_data, data)
@@ -54,3 +54,6 @@ def ingest_data(
     # Land data in BigQuery
     upload_to_bigquery(project_id, dataset_name, endpoint, bigquery_metadata, records)
     log.info(f"Completed data ingestion for {dataset_name}'s {endpoint} endpoint.")
+    # Save last page for next run, if applicable
+    if paginate:
+        store_bookmark_for_next_page(url, last_page)

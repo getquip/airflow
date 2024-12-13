@@ -2,7 +2,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
-from dags.plugins import airbud
+from custom_packages import airbud
 
 # Define constants
 DATA_SOURCE_NAME = "recharge"
@@ -13,8 +13,17 @@ INGESTION_METADATA = {
     "gcs_bucket_name": "airflow_outputs", #Variable.get("GCS_OUTPUT_BUCKET_NAME")
 }
 
+# Update headers with API key
+
 SECRET_PREFIX = "api__"
-API_KEY = airbud.get_secrets(Variable.get("project_id"), DATA_SOURCE_NAME, SECRET_PREFIX)['api_key']
+import logging
+secrets = airbud.get_secrets("quip-dw-raw-dev", DATA_SOURCE_NAME, SECRET_PREFIX)
+logging.info(f"Secrets fetched: {secrets}")
+if secrets:
+    API_KEY = secrets.get('api_key')
+    logging.info(f"API Key: {API_KEY}")
+
+API_KEY = airbud.get_secrets("quip-dw-raw-dev", DATA_SOURCE_NAME, SECRET_PREFIX)['api_key']
 INGESTION_METADATA["headers"] = {
     "X-Recharge-Access-Token": API_KEY,
     "X-Recharge-Version": "2021-11"
@@ -87,7 +96,7 @@ with DAG(
     max_active_runs=1,
 ) as dag:
 
-# Define tasks and run them all in parallel
+    # Define tasks and run them all in parallel
     tasks = []
     for endpoint in ENDPOINT_KWARGS.keys():
         task = PythonOperator(
