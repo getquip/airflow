@@ -32,4 +32,5 @@ def upload_json_to_gcs(project_id: str, json_data: List[Dict], bucket_name: str,
     
     # Upload the JSON data as a string to GCS
     blob = bucket.blob(filename)
+    print(f"Uploading data to {filename}...")
     blob.upload_from_string(",\n".join(yield_jsonl()), content_type='application/json')
