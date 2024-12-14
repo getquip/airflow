@@ -34,3 +34,8 @@ def upload_json_to_gcs(project_id: str, json_data: List[Dict], bucket_name: str,
     blob = bucket.blob(filename)
     print(f"Uploading data to {filename}...")
     blob.upload_from_string(",\n".join(yield_jsonl()), content_type='application/json')
+
+    # Store synced_at timestamp
+    df['_synced_at'] = pd.Timestamp.now()
+    return df.to_json(orient='records', lines=True)
+    

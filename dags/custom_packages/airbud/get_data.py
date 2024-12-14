@@ -45,6 +45,7 @@ def paginate_responses(
     # Initialize next_page
     try:
         next_page = Variable.get(url)
+        last_page = next_page
         print(f"Retrieved next page: {next_page}")
         params, json_data, data = get_next_page_query(params, json_data, data, pagination_query, next_page)
     except:
