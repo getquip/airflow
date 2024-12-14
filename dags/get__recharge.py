@@ -4,31 +4,24 @@ from airflow.operators.python import PythonOperator
 from airflow.models import Variable
 from custom_packages import airbud
 
-# Define constants
+# Define constants for data source
 DATA_SOURCE_NAME = "recharge"
+BASE_URL = "https://api.rechargeapps.com/"
 INGESTION_METADATA = {
-    "project_id": "quip-dw-raw-dev", #Variable.get("project_id")
+    "project_id": Variable.get("project_id"),
     "dataset_name": DATA_SOURCE_NAME,
-    "base_url": "https://api.rechargeapps.com/",
-    "gcs_bucket_name": "airflow_outputs", #Variable.get("GCS_OUTPUT_BUCKET_NAME")
+    "base_url": BASE_URL,
+    "gcs_bucket_name": Variable.get("GCS_OUTPUT_BUCKET_NAME")
 }
 
 # Update headers with API key
-
 SECRET_PREFIX = "api__"
-import logging
-secrets = airbud.get_secrets("quip-dw-raw-dev", DATA_SOURCE_NAME, SECRET_PREFIX)
-logging.info(f"Secrets fetched: {secrets}")
-if secrets:
-    API_KEY = secrets.get('api_key')
-    logging.info(f"API Key: {API_KEY}")
-
-API_KEY = airbud.get_secrets("quip-dw-raw-dev", DATA_SOURCE_NAME, SECRET_PREFIX)['api_key']
+API_KEY = airbud.get_secrets(Variable.get("project_id"), DATA_SOURCE_NAME, SECRET_PREFIX)
 INGESTION_METADATA["headers"] = {
-    "X-Recharge-Access-Token": API_KEY,
+    "X-Recharge-Access-Token": API_KEY['api_key'],
     "X-Recharge-Version": "2021-11"
 }
-# Pagination constants
+# Pagination constants: https://developer.rechargepayments.com/2021-11/cursor_pagination
 PAGINATION_ARGS = {
     "pagination_key": "next_cursor",
     "pagination_query":"page_info"

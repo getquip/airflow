@@ -13,12 +13,7 @@ def get_data(
 ) -> Dict:
     """
     Get data from an API endpoint.
-
-    Returns:
-        dict: The JSON response from the API.
     """
-    
-    # Make the GET request with appropriate parameters
     response = requests.get(
         url,
         headers=headers,
@@ -45,16 +40,20 @@ def paginate_responses(
     pagination_key = pagination_args.get("pagination_key")
     pagination_query = pagination_args.get("pagination_query")
     records = []
+    last_page = None
 
-    # Initialize last page
+    # Initialize next_page
     try:
         next_page = Variable.get(url)
+        print(f"Retrieved next page: {next_page}")
         params, json_data, data = get_next_page_query(params, json_data, data, pagination_query, next_page)
     except:
         print("No next page stored. Starting pagination from the beginning.")
+
     while True:
         # Fetch data using get_data function
         response = get_data(url, headers, params, data, json_data)
+
         # Check for Rate Limiting
         if response.status_code == 429:
             for i in range(6):
@@ -63,11 +62,14 @@ def paginate_responses(
                 response = get_data(url, headers, params, data, json_data)
                 if response.status_code != 429:
                     break
+
+        # Parse response for records and append to records list
         response_json = response.json()
         if jsonl_path:
             records.extend(response_json.get(jsonl_path))
         else:
             records.extend(response_json)
+
         # Check if there is another page of data
         next_page = response_json.get(pagination_key)
         if next_page:
@@ -81,8 +83,8 @@ def paginate_responses(
 
 
 # create next run variable if upload to bigquery is successful
-def store_bookmark_for_next_page(url, next_page):
-        Variable.set(url, next_page)
+def store_bookmark_for_next_page(url, last_page):
+        Variable.set(url, last_page)
         print(f"Next page saved as Airflow Variable.")
 
 def get_next_page_query(params, json_data, data, pagination_query, next_page):
