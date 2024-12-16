@@ -68,6 +68,58 @@ ENDPOINT_KWARGS = {
             "clustering_fields": ["type", "credit_account_id", "id"]
         }
     },
+    "customers": {
+        "jsonl_path": "customers",
+        "params": {"limit": 250},
+        "destination_blob_name": {
+            "dag_run_date": "{{ ds }}",
+            "date_range": "created_at"
+        },
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", # DAY, MONTH, YEAR
+            "partitioning_field": "created_at",
+            "clustering_fields": ["accepts_marketing", "status","id"]
+        }
+    },
+    "charges": {
+        "jsonl_path": "charges",
+        "params": {"limit": 250},
+        "destination_blob_name": {
+            "dag_run_date": "{{ ds }}",
+            "date_range": "created_at"
+        },
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", # DAY, MONTH, YEAR
+            "partitioning_field": "created_at",
+            "clustering_fields": ["status", "shipments_count", "customer_id", "id"]
+        }
+    },
+    "discounts": {
+        "jsonl_path": "discounts",
+        "params": {"limit": 250},
+        "destination_blob_name": {
+            "dag_run_date": "{{ ds }}",
+            "date_range": "created_at"
+        },
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", # DAY, MONTH, YEAR
+            "partitioning_field": "created_at",
+            "clustering_fields": ["duration","status", "discount_type", "id"]
+        }
+    },
+    "subscriptions": {
+        "jsonl_path": "subscriptions",
+        "params": {"limit": 250},
+        "destination_blob_name": {
+            "dag_run_date": "{{ ds }}",
+            "date_range": "created_at"
+        },
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", # DAY, MONTH, YEAR
+            "partitioning_field": "updated_at",
+            "clustering_fields": ["status", "sku", "customer_id", "id"]
+        }
+    },
 }
 
 # Define the DAG
