@@ -1,7 +1,6 @@
 import requests
 import json
 from typing import Dict, List
-from airflow.models import Variable
 import time
 
 def get_data(
@@ -40,7 +39,6 @@ def paginate_responses(
     pagination_key = pagination_args.get("pagination_key")
     pagination_query = pagination_args.get("pagination_query")
     records = []
-    last_page = None
 
     # Initialize next_page
     try:
@@ -50,6 +48,7 @@ def paginate_responses(
         params, json_data, data = get_next_page_query(params, json_data, data, pagination_query, next_page)
     except:
         print("No next page stored. Starting pagination from the beginning.")
+        last_page = None
 
     while True:
         # Fetch data using get_data function
