@@ -1,16 +1,3 @@
-name: Validate Airflow DAGs
-
-# Trigger this workflow when a PR is opened or updated (commits pushed).
-on:
-  pull_request:
-    types:
-      - opened        # Trigger when a new PR is opened
-      - synchronize   # Trigger when new commits are added to an open PR
-      - reopened      # Trigger when a PR is reopened
-
-env:
-  AIRFLOW_VERSION="2.10.2"  # Match the Airflow version in Composer 
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -33,11 +20,11 @@ jobs:
 
     # 4. Install the correct version of Apache Airflow
     - name: Install Airflow
-    run: |
-      CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
-      pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
+      run: |
+        CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
+        pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
 
-        # 5. Find new or modified scripts in the `dag/` directory
+    # 5. Find new or modified scripts in the `dag/` directory
     - name: Find new or modified DAGs
       id: find_dags
       run: |
@@ -75,6 +62,5 @@ jobs:
       run: |
         if [ -z "${{ env.new_dags }}" ]; then
           echo "No new or modified DAG files to validate."
-        else
+        else:
           echo "DAG validation completed successfully."
-        fi
