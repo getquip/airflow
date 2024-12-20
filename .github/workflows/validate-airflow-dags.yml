@@ -76,11 +76,3 @@ jobs:
           # Validate if the DAG file can be imported
           python -c "from airflow.models import DagBag; dag_bag = DagBag(dag_folder='dag/'); assert not dag_bag.import_errors, dag_bag.import_errors" || exit 1
         done
-
-    # 7. Output validation results
-    - name: Output validation results
-      run: |
-        if [ -z "${{ env.new_dags }}" ]; then
-          echo "No new or modified DAG files to validate."
-        else:
-          echo "DAG validation completed successfully."
