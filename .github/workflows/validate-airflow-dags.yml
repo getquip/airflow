@@ -10,6 +10,7 @@ on:
 
 env:
   AIRFLOW_VERSION: "2.10.2"  # Match the Airflow version in Composer 
+  GH_TOKEN: ${{ github.token }}  # GitHub token to access the PR files
   
 jobs:
   deploy:
