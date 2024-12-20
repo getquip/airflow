@@ -13,7 +13,7 @@ env:
 
 jobs:
   validate-dags:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner for the job
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner for the job 
 
     steps:
     # 1. Checkout the code to access the files in the PR
