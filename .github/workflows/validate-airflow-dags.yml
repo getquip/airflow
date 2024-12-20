@@ -10,10 +10,10 @@ on:
 
 env:
   AIRFLOW_VERSION="2.10.2"  # Match the Airflow version in Composer 
-
+  
 jobs:
-  validate-dags:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu runner for the job 
+  deploy:
+    runs-on: ubuntu-latest
 
     steps:
     # 1. Checkout the code to access the files in the PR
@@ -33,11 +33,11 @@ jobs:
 
     # 4. Install the correct version of Apache Airflow
     - name: Install Airflow
-    run: |
-      CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
-      pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
+      run: |
+        CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
+        pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
 
-        # 5. Find new or modified scripts in the `dag/` directory
+    # 5. Find new or modified scripts in the `dag/` directory
     - name: Find new or modified DAGs
       id: find_dags
       run: |
@@ -75,6 +75,5 @@ jobs:
       run: |
         if [ -z "${{ env.new_dags }}" ]; then
           echo "No new or modified DAG files to validate."
-        else
+        else:
           echo "DAG validation completed successfully."
-        fi
