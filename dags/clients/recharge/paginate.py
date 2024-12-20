@@ -59,11 +59,9 @@ def paginate_responses(
     if endpoint == "events":
         max_event_created_at = df.created_at.max()
         last_event_id = df[df.created_at == max_event_created_at].id.max()
-        print(last_event_id)
-        #airbud.store_next_page_across_dags("recharge__events", last_event_id)
+        airbud.store_next_page_across_dags("recharge__events", last_event_id)
     else:
         df = pd.DataFrame(records)
         last_updated_at = df["updated_at"].max()
-        print(last_updated_at)
-        #airbud.store_next_page_across_dags(f"recharge__{endpoint}", last_updated_at)
+        airbud.store_next_page_across_dags(f"recharge__{endpoint}", last_updated_at)
     return records
