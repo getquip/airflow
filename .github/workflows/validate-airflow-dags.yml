@@ -1,3 +1,16 @@
+name: Validate Airflow DAGs
+
+# Trigger this workflow when a PR is opened or updated (commits pushed).
+on:
+  pull_request:
+    types:
+      - opened        # Trigger when a new PR is opened
+      - synchronize   # Trigger when new commits are added to an open PR
+      - reopened      # Trigger when a PR is reopened
+
+env:
+  AIRFLOW_VERSION="2.10.2"  # Match the Airflow version in Composer 
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
