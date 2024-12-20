@@ -32,13 +32,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
 
-    # 4. Install the correct version of Apache Airflow
-    - name: Install Airflow
-      run: |
-        CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
-        pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
-
-    # 5. Find new or modified scripts in the `dag/` directory
+    # 4. Find new or modified scripts in the `dag/` directory
     - name: Find new or modified DAGs
       id: find_dags
       run: |
@@ -63,6 +57,13 @@ jobs:
         
         # Save the list of new/modified DAG files as an environment variable
         echo "new_dags=$new_dag_files" >> $GITHUB_ENV
+
+    # 5. Install the correct version of Apache Airflow
+    - name: Install Airflow
+      if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
+      run: |
+        CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
+        pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
 
     # 6. Validate if any new DAG scripts are valid
     - name: Validate new DAGs
