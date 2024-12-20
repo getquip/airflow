@@ -2,6 +2,8 @@ from google.cloud import storage
 import pandas as pd
 import json
 from typing import List, Dict
+from datetime import timezone, datetime
+
 
 def upload_json_to_gcs(project_id: str, json_data: List[Dict], bucket_name: str, bucket_path: str, destination_blob_name: dict) -> None:
     """
@@ -22,7 +24,7 @@ def upload_json_to_gcs(project_id: str, json_data: List[Dict], bucket_name: str,
     # Initialize the GCS client
     client = storage.Client(project_id)
     # Get the GCS bucket object
-    bucket = client.get_bucket("airflow_outputs")
+    bucket = client.get_bucket(bucket_name)
     
     # Create the destination file name
     df = pd.DataFrame(json_data)
@@ -36,6 +38,7 @@ def upload_json_to_gcs(project_id: str, json_data: List[Dict], bucket_name: str,
     blob.upload_from_string(",\n".join(yield_jsonl()), content_type='application/json')
 
     # Store synced_at timestamp
-    df['source_synced_at'] = pd.Timestamp.now()
-    return df.to_json(orient='records', lines=True)
-    
+    dt = datetime.now(timezone.utc) 
+    utc_time = dt.replace(tzinfo=timezone.utc)
+    df['source_synced_at'] = str(utc_time)
+    return json.loads(df.to_json(orient='records', lines=False))
