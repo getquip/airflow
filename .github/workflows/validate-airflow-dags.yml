@@ -9,7 +9,7 @@ on:
       - reopened      # Trigger when a PR is reopened
 
 env:
-  AIRFLOW_VERSION="2.10.2"  # Match the Airflow version in Composer 
+  AIRFLOW_VERSION: "2.10.2"  # Match the Airflow version in Composer 
   
 jobs:
   deploy:
