@@ -7,6 +7,12 @@ on:
       - opened        # Trigger when a new PR is opened
       - synchronize   # Trigger when new commits are added to an open PR
       - reopened      # Trigger when a PR is reopened
+      - ready_for_review # Trigger when a PR is marked as ready for review
+  pull_request_review:
+    types:
+      - submitted     # Trigger when a review is submitted
+    # Only trigger on approved reviews
+    if: ${{ github.event.review.state == 'approved' }}  # Ensures it only triggers when the PR is approved
 
 env:
   AIRFLOW_VERSION: "2.10.2"  # Match the Airflow version in Composer 
