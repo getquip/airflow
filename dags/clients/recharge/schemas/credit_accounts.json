@@ -1,0 +1,46 @@
+[
+    {
+        "name": "id",
+        "type": "INTEGER"
+    },
+    {
+        "name": "customer_id",
+        "type": "INTEGER"
+    },
+    {
+        "name": "available_balance",
+        "type": "STRING"
+    },
+    {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "currency_code",
+        "type": "STRING"
+    },
+    {
+        "name": "expires_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "initial_value",
+        "type": "STRING"
+    },
+    {
+        "name": "name",
+        "type": "STRING"
+    },
+    {
+        "name": "type",
+        "type": "STRING"
+    },
+    {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    }
+]

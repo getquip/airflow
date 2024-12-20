@@ -1,0 +1,103 @@
+[
+    {
+        "name": "id",
+        "type": "INTEGER"
+    },
+    {
+        "name": "analytics_data",
+        "type": "RECORD",
+        "fields": [
+            {
+                "name": "utm_params",
+                "type": "STRING",
+                "mode": "REPEATED"
+            }
+        ]
+    },
+    {
+        "name": "apply_credit_to_next_checkout_charge",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "apply_credit_to_next_recurring_charge",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "email",
+        "type": "STRING"
+    },
+    {
+        "name": "external_customer_id",
+        "type": "RECORD",
+        "fields": [
+            {
+                "name": "ecommerce",
+                "type": "STRING"
+            }
+        ]
+    },
+    {
+        "name": "first_charge_processed_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "first_name",
+        "type": "STRING"
+    },
+    {
+        "name": "has_payment_method_in_dunning",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "has_valid_payment_method",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "hash",
+        "type": "STRING"
+    },
+    {
+        "name": "last_name",
+        "type": "STRING"
+    },
+    {
+        "name": "memberships_active_count",
+        "type": "INTEGER"
+    },
+    {
+        "name": "memberships_total_count",
+        "type": "INTEGER"
+    },
+    {
+        "name": "phone",
+        "type": "STRING"
+    },
+    {
+        "name": "subscription_related_charge_streak",
+        "type": "INTEGER"
+    },
+    {
+        "name": "subscriptions_active_count",
+        "type": "INTEGER"
+    },
+    {
+        "name": "subscriptions_total_count",
+        "type": "INTEGER"
+    },
+    {
+        "name": "tax_exempt",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    }
+]
