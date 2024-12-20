@@ -51,6 +51,12 @@ jobs:
           new_dag_files=$(echo "$changed_files" | grep "^dag/.*\.py$" || true)
         fi
 
+        # Check if there are no new/modified DAG files
+        if [ -z "$new_dag_files" ]; then
+          echo "No new or modified DAG files. Exiting workflow."
+          exit 0  # Exit the workflow if no new DAG files are found
+        fi
+
         echo "New or modified DAG files:"
         echo "$new_dag_files"
         
