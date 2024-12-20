@@ -1,7 +1,7 @@
 name: Validate Airflow DAGs
 
 # Trigger this workflow when a PR is opened or updated (commits pushed).
-on:
+on: 
   pull_request:
     types:
       - opened        # Trigger when a new PR is opened
