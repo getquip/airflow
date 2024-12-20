@@ -9,7 +9,7 @@ on:
       - reopened      # Trigger when a PR is reopened
 
 env:
-
+  AIRFLOW_VERSION="2.10.2"  # Match the Airflow version in Composer 
 
 jobs:
   validate-dags:
@@ -34,7 +34,6 @@ jobs:
     # 4. Install the correct version of Apache Airflow
     - name: Install Airflow
     run: |
-      AIRFLOW_VERSION="2.10.2"  # Match the Airflow version in Composer 
       CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
       pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
 
