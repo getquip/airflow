@@ -35,9 +35,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'  # Set up Python 3.9 (or your preferred version)
-
-      # 3. Ensure the latest version of pip is installed
-      - name: Upgrade pip
         run: |
           python -m pip install --upgrade pip
 
@@ -119,7 +116,7 @@ jobs:
       - name: Validate new DAGs
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
-          airflow db init
+          airflow connections create-default-connections
           # Read the space-separated string into an array
           IFS=' ' read -r -a new_dags <<< "$new_dags"
 
@@ -130,4 +127,5 @@ jobs:
             # Validate the DAG file
             python -c "from airflow.models import DagBag;from airflow.models import Variable; Variable.set("PROJECT_ID", "quip-dw-raw-dev");Variable.set("GCS_BUCKET", "quip_airflow_dev"); dag_bag = DagBag(include_examples = False); print(list(dag_bag.dags.keys())); assert dag_bag.dags.get('$dag_file'); assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
           done
+
 
