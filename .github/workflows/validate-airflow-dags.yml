@@ -15,6 +15,9 @@ on:
 env:
   AIRFLOW_VERSION: "2.10.2"  # Match the Airflow version in Composer 
   GH_TOKEN: ${{ github.token }}  # GitHub token to access the PR files
+  GCS_BUCKET_NAME: ${{ secrets.AIRFLOW_DEV_BUCKET }}
+  GCP_PROJECT_ID: ${{ secrets.GCP_DEV_PROJECT_ID }}  
+  GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
   
 jobs:
   deploy:
@@ -108,9 +111,9 @@ jobs:
       - name: Authenticate with Google Cloud SDK
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
-          echo ${{ secrets.GCP_CREDENTIALS }} > gcp-credentials.json
-          gcloud auth activate-service-account --key-file=gcp-credentials.json
-          gcloud config set project quip-dw-raw-dev
+          echo $GCP_CREDENTIALS_JSON > gcp_key.json
+          gcloud auth activate-service-account --key-file=gcp_key.json
+          gcloud config set project $GCP_PROJECT_ID
 
       # 7. Validate if any new DAG scripts are valid
       - name: Validate new DAGs
@@ -125,6 +128,6 @@ jobs:
             echo "Validating DAG: $dag_file"
 
             # Validate the DAG file
-            python -c "from airflow.models import DagBag;from airflow.models import Variable; Variable.set("PROJECT_ID", "test");Variable.set("GCS_BUCKET", "test"); dag_bag = DagBag(include_examples = False); print(list(dag_bag.dags.keys())); assert dag_bag.dags.get('$dag_file'); assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
+            python -c "from airflow.models import DagBag;from airflow.models import Variable; Variable.set("PROJECT_ID", "quip-dw-raw-dev");Variable.set("GCS_BUCKET", "quip_airflow_dev"); dag_bag = DagBag(include_examples = False); print(list(dag_bag.dags.keys())); assert dag_bag.dags.get('$dag_file'); assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
           done
 
