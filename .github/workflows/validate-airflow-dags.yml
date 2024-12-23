@@ -50,7 +50,7 @@ jobs:
           echo "Changed files: $changed_files"
 
           # Filter for scripts in the dags/ folder
-          new_dag_files=$(echo "$changed_files" | grep "^dags/")
+          new_dag_files=$(echo "$changed_files" | grep "^dags/" || true)
 
           # Prepend 'dags/' to each pattern from .airflowignore
           ignore_patterns=$(cat dags/.airflowignore | sed 's|^|dags/|')
