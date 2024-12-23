@@ -90,6 +90,10 @@
     {
         "name": "verb",
         "type": "STRING"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
     }
 
 ]

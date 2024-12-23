@@ -55,8 +55,9 @@
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
             "partitioning_field": "created_at",
-            "clustering_fields": ["status", "shipments_count", "customer_id", "id"]
-        }
+            "clustering_fields": ["status", "id"]
+        },
+        "chunk_size": 1000
     },
     "discounts": {
         "params": {},
