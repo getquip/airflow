@@ -99,7 +99,7 @@ jobs:
           pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
 
       # 6. Validate if any new DAG scripts are valid
-    - name: Validate new DAGs
+      - name: Validate new DAGs
       if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
       run: |
         # Read the space-separated string into an array
