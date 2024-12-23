@@ -51,6 +51,8 @@ jobs:
 
           # Filter for scripts in the dags/ folder
           new_dag_files=$(echo "$changed_files" | grep "^dags/" || true)
+          echo "DAG files:"
+          echo "$new_dag_files"
 
           # Prepend 'dags/' to each pattern from .airflowignore
           ignore_patterns=$(cat dags/.airflowignore | sed 's|^|dags/|')
@@ -59,7 +61,7 @@ jobs:
 
           # Loop through the ignore patterns and exclude those files from the new_dag_files list
           for pattern in $ignore_patterns; do
-            new_dag_files=$(echo "$new_dag_files" | grep -v -F "$pattern" || true)
+            new_dag_files=$(echo "$new_dag_files" | grep -v "$pattern" || true)
           done
 
           # Check if there are no new/modified DAG files
