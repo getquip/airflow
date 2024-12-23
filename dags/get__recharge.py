@@ -7,18 +7,20 @@ import json
 import datetime
 
 # Define constants for data source
+PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
+GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
 DATA_SOURCE_NAME = "recharge"
 BASE_URL = "https://api.rechargeapps.com/"
 INGESTION_METADATA = {
-    "project_id": Variable.get("PROJECT_ID"),
+    "project_id": PROJECT_ID,
     "dataset_name": DATA_SOURCE_NAME,
     "base_url": BASE_URL,
-    "gcs_bucket_name": Variable.get("GCS_BUCKET")
+    "gcs_bucket_name": GCS_BUCKET,
 }
 
 # Update headers with API key
 SECRET_PREFIX = "api__"
-API_KEY = airbud.get_secrets(Variable.get("PROJECT_ID"), DATA_SOURCE_NAME, SECRET_PREFIX)
+API_KEY = airbud.get_secrets(PROJECT_ID, DATA_SOURCE_NAME, SECRET_PREFIX)
 INGESTION_METADATA["headers"] = {
     "X-Recharge-Access-Token": API_KEY['api_key'],
     "X-Recharge-Version": "2021-11"
