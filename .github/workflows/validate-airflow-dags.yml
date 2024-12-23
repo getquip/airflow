@@ -50,7 +50,7 @@ jobs:
           echo "Changed files: $changed_files"
 
           # Filter for scripts in the dags/ folder
-          new_dag_files=$(grep "^dags/.*" <<< "$changed_files"))
+          new_dag_files=$(grep "^dags/.*" <<< "$changed_files" || true)
           echo "DAG files:"
           echo "$new_dag_files"
 
