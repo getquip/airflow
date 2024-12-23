@@ -63,7 +63,7 @@ jobs:
 
           # Loop through the changed files and filter out the new/modified DAG files
           for file in "${changed_files_array[@]}"; do
-            # Check if the file starts with "dags/" and is not the .airflowignore file
+            # Check if the file starts with "dags/" && is not the .airflowignore file
             if [[ "$file" == dags/* ]] and [[ "$file" != dags/.airflowignore ]]; then 
               echo "$file"
               ignore_file=false
