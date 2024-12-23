@@ -115,7 +115,7 @@ jobs:
             echo "Validating DAG: $dag_file"
 
             # Validate the DAG file
-            python -c "from airflow.models import DagBag; dag_bag = DagBag(); assert dag_bag.dags.get('$dag_file'), f'DAG {$dag_file} not found in the DAG bag'; assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
+            python -c "from airflow.models import DagBag; dag_bag = DagBag(load_examples = False); assert dag_bag.dags.get('$dag_file'), f'DAG {$dag_file} not found in the DAG bag'; assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
           done
 
 
