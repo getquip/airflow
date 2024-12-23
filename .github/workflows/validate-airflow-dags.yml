@@ -51,7 +51,7 @@ jobs:
           echo "Changed files: $changed_files"
 
           # Strip the "dags/" prefix from the changed files so we can check against .airflowignore
-          changed_files_no_dags=$(echo "$changed_files" | sed 's|^dags/||')
+          changed_files=$(echo "$changed_files" | sed 's|^dags/||')
 
           # Filter for scripts in the dags/ folder that are not in .airflowignore
           if [ -f .airflowignore ]; then
