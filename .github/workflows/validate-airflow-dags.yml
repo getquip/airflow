@@ -11,8 +11,6 @@ on:
   pull_request_review:
     types:
       - submitted     # Trigger when a review is submitted
-    # Only trigger on approved reviews
-    if: ${{ github.event.review.state == 'approved' }}  # Ensures it only triggers when the PR is approved
 
 env:
   AIRFLOW_VERSION: "2.10.2"  # Match the Airflow version in Composer 
