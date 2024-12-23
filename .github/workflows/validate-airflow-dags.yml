@@ -49,21 +49,18 @@ jobs:
           changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
           echo "Changed files: $changed_files"
 
-          # Filter for scripts in the dags/ folder that are not in .airflowignore
-          if [ -f .airflowignore ]; then
-            # Prepend 'dags/' to each pattern from .airflowignore
-            ignore_patterns=$(cat .airflowignore | sed 's|^|dags/|')
+          # Filter for scripts in the dags/ folder
+          new_dag_files=$(echo "$changed_files" | grep "^dags/")
 
-            # Filter changed files that start with 'dags/' and end with '.py'
-            new_dag_files=$(echo "$changed_files" | grep "^dags/.*\.py$")
+          # Prepend 'dags/' to each pattern from .airflowignore
+          ignore_patterns=$(cat .airflowignore | sed 's|^|dags/|')
+          echo "Paths to ignore:"
+          echo "$ignore_patterns"
 
-            # Loop through the ignore patterns and exclude those files from the new_dag_files list
-            for pattern in $ignore_patterns; do
-              new_dag_files=$(echo "$new_dag_files" | grep -v -F "$pattern" || true)
-            done
-          else
-            new_dag_files=$(echo "$changed_files" | grep ".*\.py$" || true)
-          fi
+          # Loop through the ignore patterns and exclude those files from the new_dag_files list
+          for pattern in $ignore_patterns; do
+            new_dag_files=$(echo "$new_dag_files" | grep -v -F "$pattern" || true)
+          done
 
           # Check if there are no new/modified DAG files
           if [ -z "$new_dag_files" ]; then
