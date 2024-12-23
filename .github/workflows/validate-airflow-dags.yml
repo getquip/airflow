@@ -54,6 +54,9 @@ jobs:
             # Prepend 'dags/' to each pattern from .airflowignore
             ignore_patterns=$(cat .airflowignore | sed 's|^|dags/|')
 
+            # Filter changed files that start with 'dags/' and end with '.py'
+            new_dag_files=$(echo "$changed_files" | grep "^dags/.*\.py$")
+
             # Loop through the ignore patterns and exclude those files from the new_dag_files list
             for pattern in $ignore_patterns; do
               new_dag_files=$(echo "$new_dag_files" | grep -v -F "$pattern" || true)
