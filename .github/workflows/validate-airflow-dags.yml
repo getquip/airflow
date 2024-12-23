@@ -49,8 +49,8 @@ jobs:
           changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
           echo "Changed files: $changed_files"
 
-          # Filter files starting with 'dags/' and ending with '.py'
-          new_dag_files=$(grep "^dags/.*\.py$" <<< "$changed_files")
+          # Filter for scripts in the dags/ folder
+          new_dag_files=$(grep "^dags/.*" <<< "$changed_files"))
           echo "DAG files:"
           echo "$new_dag_files"
 
