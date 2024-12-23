@@ -46,7 +46,7 @@ jobs:
           git fetch origin ${{ github.event.pull_request.base.ref }}
           
           # Get changed files between base and head
-          changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
+          changed_files=$(git diff --name-only --diff-filter=ACMRTUXB origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
 
           # Convert the space-separated string into an array
           IFS=' ' read -r -a changed_files_array <<< "$changed_files"
