@@ -50,10 +50,11 @@ jobs:
 
           # Convert the space-separated string into an array
           IFS=' ' read -r -a changed_files_array <<< "$changed_files"
-          echo "Changed files: ${changed_files_array[@]}"
+          echo "Changed files:"
+          echo "${changed_files_array[@]}"
 
           # Prepend 'dags/' to each pattern from .airflowignore
-          ignore_patterns=($(cat dags/.airflowignore | sed 's|^|dags/|'))
+          mapfile -t ignore_patterns < dags/.airflowignore
           echo "Paths to ignore:"
           echo "${ignore_patterns[@]}"
 
@@ -62,7 +63,8 @@ jobs:
 
           # Loop through the changed files and filter out the new/modified DAG files
           for file in "${changed_files_array[@]}"; do
-            if [[ "$file" == dags/* ]]; then # Check if the file starts with "dags/"
+            # Check if the file starts with "dags/" and is not the .airflowignore file
+            if [[ "$file" == dags/* ]] and [[ "$file" != dags/.airflowignore ]]; then 
               echo "$file"
               ignore_file=false
               for pattern in "${ignore_patterns[@]}"; do # Check if the file is not in the ignore list
