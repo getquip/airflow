@@ -48,10 +48,11 @@ jobs:
           # Get changed files between base and head
           changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
           
-          echo "Changed files: $changed_files"
+          
 
           # Strip the "dags/" prefix from the changed files so we can check against .airflowignore
           changed_files=$(echo "$changed_files" | sed 's|^dags/||')
+          echo "Changed files: $changed_files"
 
           # Filter for scripts in the dags/ folder that are not in .airflowignore
           if [ -f .airflowignore ]; then
