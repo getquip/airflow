@@ -53,7 +53,7 @@ jobs:
           new_dag_files=$(echo "$changed_files" | grep "^dags/")
 
           # Prepend 'dags/' to each pattern from .airflowignore
-          ignore_patterns=$(cat .airflowignore | sed 's|^|dags/|')
+          ignore_patterns=$(cat dags/.airflowignore | sed 's|^|dags/|')
           echo "Paths to ignore:"
           echo "$ignore_patterns"
 
