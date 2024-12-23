@@ -37,12 +37,16 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install apache-airflow[virtualenv]
           pip install -r requirements.txt
 
       # 4. Find new or modified scripts in the `dags/` directory
       - name: Find new or modified DAGs
         id: find_dags
         run: |
+          # Change to the repository directory
+          cd dags
+          
           # Fetch base branch to compare with the PR's head
           git fetch origin ${{ github.event.pull_request.base.ref }}
           
@@ -52,8 +56,8 @@ jobs:
           # Convert the space-separated string into an array
           IFS=' ' read -r -a changed_files_array <<< "$changed_files"
 
-          # Prepend 'dags/' to each pattern from .airflowignore
-          mapfile -t ignore_patterns < dags/.airflowignore
+          # Get patters from .airflowignore
+          mapfile -t ignore_patterns < .airflowignore
 
           # Initialize an empty array for new DAG files
           new_dag_files=()
@@ -61,7 +65,7 @@ jobs:
           # Loop through the changed files and filter out the new/modified DAG files
           for file in "${changed_files_array[@]}"; do
             # Check if the file starts with "dags/" and is not the .airflowignore file
-            if [[ "$file" == dags/* ]] && [[ "$file" != dags/.airflowignore ]]; then 
+            if [[ "$file" == dags/* ]] && [[ "$file" != .airflowignore ]]; then 
               ignore_file=false
 
               # Check if the file is in the ignore list
