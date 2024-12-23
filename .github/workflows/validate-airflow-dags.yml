@@ -37,7 +37,11 @@ jobs:
     - name: Upgrade pip
       run: |
         python -m pip install --upgrade pip
-
+    
+    # Change to the dags directory
+      - name: Change directory to dags
+        run: cd dag
+    
     # 4. Find new or modified scripts in the `dag/` directory
     - name: Find new or modified DAGs
       id: find_dags
@@ -47,11 +51,11 @@ jobs:
           changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
           echo "Changed files: $changed_files"
         
-        # Filter for scripts in the `dags/` folder that are not in `.airflowignore`
-        if [ -f dags/.airflowignore ]; then
-          new_dag_files=$(echo "$changed_files" | grep "^dags/.*\.py$" | grep -v -F -f dags/.airflowignore || true)
+        # Filter for scripts in that are not in `.airflowignore`
+        if [ -f .airflowignore ]; then
+          new_dag_files=$(echo "$changed_files" | grep "^.*\.py$" | grep -v -F -f .airflowignore || true)
         else
-          new_dag_files=$(echo "$changed_files" | grep "^dags/.*\.py$" || true)
+          new_dag_files=$(echo "$changed_files" | grep "^.*\.py$" || true)
         fi
 
         # Check if there are no new/modified DAG files
