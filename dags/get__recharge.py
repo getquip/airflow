@@ -17,7 +17,7 @@ INGESTION_METADATA = {
 
 # Update headers with API key
 SECRET_PREFIX = "api__"
-API_KEY = airbud.get_secrets(Variable.get("project_id"), DATA_SOURCE_NAME, SECRET_PREFIX)
+API_KEY = airbud.get_secrets(Variable.get("PROJECT_ID"), DATA_SOURCE_NAME, SECRET_PREFIX)
 INGESTION_METADATA["headers"] = {
     "X-Recharge-Access-Token": API_KEY['api_key'],
     "X-Recharge-Version": "2021-11"
