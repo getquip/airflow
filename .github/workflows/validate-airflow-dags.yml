@@ -8,9 +8,6 @@ on:
       - synchronize   # Trigger when new commits are added to an open PR
       - reopened      # Trigger when a PR is reopened
       - ready_for_review # Trigger when a PR is marked as ready for review
-  pull_request_review:
-    types:
-      - submitted     # Trigger when a review is submitted
 
 env:
   AIRFLOW_VERSION: "2.10.2"  # Match the Airflow version in Composer 
@@ -115,7 +112,7 @@ jobs:
       - name: Validate new DAGs
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
-          airflow connections create-default-connections
+          airflow db migrate
           # Read the space-separated string into an array
           IFS=' ' read -r -a new_dags <<< "$new_dags"
 
@@ -128,3 +125,9 @@ jobs:
           done
 
 
+from airflow.models import DagBag
+from airflow.models import Variable
+Variable.set("project_id", "quip-dw-raw-dev")
+Variable.set("GCS_BUCKET", "quip_airflow_dev") 
+dag_bag = DagBag(include_examples = False)
+myDag=dag_bag.process_file('get__recharge.py')
