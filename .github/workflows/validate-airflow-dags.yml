@@ -47,21 +47,34 @@ jobs:
           
           # Get changed files between base and head
           changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
-          echo "Changed files: $changed_files"
 
-          # Filter for scripts in the dags/ folder
-          new_dag_files=$(echo "$changed_files" | grep "^dags/")
-          echo "DAG files:"
-          echo "$new_dag_files"
+          # Convert the space-separated string into an array
+          IFS=' ' read -r -a changed_files_array <<< "$changed_files"
+          echo "Changed files: ${changed_files_array[@]}"
 
           # Prepend 'dags/' to each pattern from .airflowignore
-          ignore_patterns=$(cat dags/.airflowignore | sed 's|^|dags/|')
+          ignore_patterns=($(cat dags/.airflowignore | sed 's|^|dags/|'))
           echo "Paths to ignore:"
-          echo "$ignore_patterns"
+          echo "${ignore_patterns[@]}"
 
-          # Loop through the ignore patterns and exclude those files from the new_dag_files list
-          for pattern in $ignore_patterns; do
-            new_dag_files=$(echo "$new_dag_files" | grep -v "$pattern" || true)
+          # Initialize an empty array for new DAG files
+          new_dag_files=()
+
+          # Loop through the changed files and filter out the new/modified DAG files
+          for file in "${changed_files_array[@]}"; do
+            if [[ "$file" == dags/* ]]; then # Check if the file starts with "dags/"
+              ignore_file=false
+              for pattern in "${ignore_patterns[@]}"; do # Check if the file is not in the ignore list
+                if [[ "$file" == $pattern ]]; then
+                  ignore_file=true
+                  break
+                fi
+              done
+              # If no match found, add the file to the new_dag_files array
+              if [ "$ignore_file" = false ]; then
+                new_dag_files+=("$file")
+              fi
+            fi
           done
 
           # Check if there are no new/modified DAG files
@@ -71,10 +84,10 @@ jobs:
           fi
 
           echo "New or modified DAG files:"
-          echo "$new_dag_files"
+          echo "${new_dag_files[@]}"
         
           # Save the list of new/modified DAG files as an environment variable
-          echo "new_dags=$new_dag_files" >> $GITHUB_ENV
+          echo "new_dags=${new_dag_files[*]}" >> $GITHUB_ENV
 
       # 5. Install the correct version of Apache Airflow
       - name: Install Airflow
