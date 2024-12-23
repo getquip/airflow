@@ -38,13 +38,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
 
-      # 5. Find new or modified scripts in the `dags/` directory
+      # 4. Find new or modified scripts in the `dags/` directory
       - name: Find new or modified DAGs
         id: find_dags
         run: |
-          # Change to the dags directory
-          cd dags
-
           # Fetch base branch to compare with the PR's head
           git fetch origin ${{ github.event.pull_request.base.ref }}
           
@@ -52,7 +49,10 @@ jobs:
           changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
           
           echo "Changed files: $changed_files"
-        
+
+          # Strip the "dags/" prefix from the changed files so we can check against .airflowignore
+          changed_files_no_dags=$(echo "$changed_files" | sed 's|^dags/||')
+
           # Filter for scripts in the dags/ folder that are not in .airflowignore
           if [ -f .airflowignore ]; then
             new_dag_files=$(echo "$changed_files" | grep ".*\.py$" | grep -v -F -f .airflowignore || true)
@@ -72,14 +72,14 @@ jobs:
           # Save the list of new/modified DAG files as an environment variable
           echo "new_dags=$new_dag_files" >> $GITHUB_ENV
 
-      # 6. Install the correct version of Apache Airflow
+      # 5. Install the correct version of Apache Airflow
       - name: Install Airflow
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
           CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
           pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
 
-      # 7. Validate if any new DAG scripts are valid
+      # 6. Validate if any new DAG scripts are valid
       - name: Validate new DAGs
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
