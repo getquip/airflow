@@ -66,15 +66,19 @@ jobs:
             # Check if the file starts with "dags/" and is not the .airflowignore file
             if [[ "$file" == dags/* ]] && [[ "$file" != dags/.airflowignore ]]; then 
               ignore_file=false
-              for pattern in "${ignore_patterns[@]}"; do # Check if the file is not in the ignore list
+
+              # Check if the file is in the ignore list
+              for pattern in "${ignore_patterns[@]}"; do
                 if [[ "$file" =~ $pattern ]]; then
                   ignore_file=true
                   break
                 fi
               done
+
               # If no match found, add the file to the new_dag_files array
               if [ "$ignore_file" = false ]; then
-                new_dag_files+=("$file")
+                dag_name="${file/dags\//}" # Remove the 'dags/' prefix
+                new_dag_files+=("$dag_name")
               fi
             fi
           done
@@ -107,8 +111,7 @@ jobs:
 
           # Loop through each DAG file and validate
           for dag_file in "${new_dags[@]}"; do
-            # Remove the 'dags/' prefix
-            dag_name="${dag_file/dags\//}"
+            echo "Validating DAG: $dag_file"
 
             # Validate the DAG file
             python -c "from airflow.models import DagBag; dag_bag = DagBag(dag_folder='dags/'); assert dag_bag.dags.get('$dag_name'), f'DAG {$dag_name} not found in the DAG bag'; assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
