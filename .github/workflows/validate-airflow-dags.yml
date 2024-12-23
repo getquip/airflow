@@ -47,11 +47,11 @@ jobs:
           changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
           echo "Changed files: $changed_files"
         
-        # Filter for scripts in the `dag/` folder that are not in `.airflowignore`
+        # Filter for scripts in the `dags/` folder that are not in `.airflowignore`
         if [ -f .airflowignore ]; then
-          new_dag_files=$(echo "$changed_files" | grep "^dag/.*\.py$" | grep -v -F -f .airflowignore || true)
+          new_dag_files=$(echo "$changed_files" | grep "^dags/.*\.py$" | grep -v -F -f .airflowignore || true)
         else
-          new_dag_files=$(echo "$changed_files" | grep "^dag/.*\.py$" || true)
+          new_dag_files=$(echo "$changed_files" | grep "^dags/.*\.py$" || true)
         fi
 
         # Check if there are no new/modified DAG files
