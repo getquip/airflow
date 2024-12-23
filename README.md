@@ -44,5 +44,5 @@ We store our json responses in GCS using the following structure:
 
 Example:
     - DAG named `get__recharge`
-    - `quip-dw-raw-dev/airflow/get/recharge/file`
-    - `quip-dw-raw/airflow/get/recharge/file`
+    - `quip-dw-raw-dev/quip_airflow/get/recharge/file`
+    - `quip-dw-raw/quip_airflow/get/recharge/file`
