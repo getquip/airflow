@@ -40,7 +40,7 @@ jobs:
     
       # 4. Change to the dags directory
       - name: Change directory to dags
-        run: cd dags  # Use "cd dags" instead of "cd dag"
+        run: cd dags
 
       # 5. Find new or modified scripts in the `dags/` directory
       - name: Find new or modified DAGs
@@ -56,9 +56,9 @@ jobs:
         
           # Filter for scripts in the dags/ folder that are not in .airflowignore
           if [ -f .airflowignore ]; then
-            new_dag_files=$(echo "$changed_files" | grep "^.*\.py$" | grep -v -F -f .airflowignore || true)
+            new_dag_files=$(echo "$changed_files" | grep ".*\.py$" | grep -v -F -f .airflowignore || true)
           else
-            new_dag_files=$(echo "$changed_files" | grep "^.*\.py$" || true)
+            new_dag_files=$(echo "$changed_files" | grep ".*\.py$" || true)
           fi
 
           # Check if there are no new/modified DAG files
