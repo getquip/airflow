@@ -41,7 +41,11 @@ jobs:
       id: find_dags
       run: |
         # Get the list of changed files in the PR using GitHub API
-        changed_files=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path')
+        echo "changed_files=$(git diff --name-only -r HEAD^1 HEAD | xargs)" >> $GITHUB_OUTPUT
+
+        # List the changed files
+        for file in ${{ steps.changed-files.outputs.changed_files }}; do
+          echo "$file was changed"
         
         # Filter for scripts in the `dag/` folder that are not in `.airflowignore`
         if [ -f .airflowignore ]; then
