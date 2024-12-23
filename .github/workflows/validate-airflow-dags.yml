@@ -120,6 +120,7 @@ jobs:
 
             # Check if there are any import errors
             assert not dag_bag.import_errors, dag_bag.import_errors || exit 1
+        done
 
 
 
