@@ -111,15 +111,12 @@ jobs:
           dag="${dag_file/dags\//}"
 
           # Validate the DAG file
-          python -c |
-            from airflow.models import DagBag;
-            dag_bag = DagBag(dag_folder='dags/');
-
-            # Check if the DAG is found in the DAG bag
-            assert dag_bag.dags.get('$dag'), 'DAG $dag_file not found in the DAG bag';
-
-            # Check if there are any import errors
-            assert not dag_bag.import_errors, dag_bag.import_errors || exit 1
+          python -c "
+from airflow.models import DagBag;
+dag_bag = DagBag(dag_folder='dags/');
+assert dag_bag.dags.get('$dag'), f'DAG {dag_file} not found in the DAG bag';
+assert not dag_bag.import_errors, dag_bag.import_errors
+" || exit 1
         done
 
 
