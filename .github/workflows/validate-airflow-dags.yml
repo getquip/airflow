@@ -121,13 +121,5 @@ jobs:
             echo "Validating DAG: $dag_file"
 
             # Validate the DAG file
-            python -c "from airflow.models import DagBag;from airflow.models import Variable; Variable.set("PROJECT_ID", "quip-dw-raw-dev");Variable.set("GCS_BUCKET", "quip_airflow_dev"); dag_bag = DagBag(include_examples = False); print(list(dag_bag.dags.keys())); assert dag_bag.dags.get('$dag_file'); assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
+            python -c "from airflow.models import DagBag;from airflow.models import Variable; Variable.set("PROJECT_ID", "quip-dw-raw-dev");Variable.set("GCS_BUCKET", "quip_airflow_dev"); dag_bag = DagBag(include_examples = False); myDag=dag_bag.process_file('get__recharge.py'); assert dag_bag.dags.get('$dag_file'); assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
           done
-
-
-from airflow.models import DagBag
-from airflow.models import Variable
-Variable.set("project_id", "quip-dw-raw-dev")
-Variable.set("GCS_BUCKET", "quip_airflow_dev") 
-dag_bag = DagBag(include_examples = False)
-myDag=dag_bag.process_file('get__recharge.py')
