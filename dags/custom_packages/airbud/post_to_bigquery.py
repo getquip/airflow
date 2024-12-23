@@ -73,7 +73,8 @@ def upload_to_bigquery(
         dataset_name: str,  # Destination dataset
         endpoint: str,  # Destination table
         bigquery_metadata: dict,  # Metadata for BigQuery table creation
-        records: List[Dict]  # List of JSON objects to insert into BigQuery
+        records: List[Dict],  # List of JSON objects to insert into BigQuery
+        chunk_size: int,  # Number of rows to insert at a time
 ) -> None:
     """
     Upload JSON data to BigQuery.
@@ -104,12 +105,13 @@ def upload_to_bigquery(
     # Insert rows into BigQuery
     max_retries=3
     # Insert data in chunks -- insert limit is 10,000 rows
-    chunk_size = 8000
     for i in range(0, len(records), chunk_size):
         for attempt in range(max_retries):
             chunk = records[i:i + chunk_size]
             errors = client.insert_rows_json(table_ref, chunk)
-            if errors:
+            if attempt == max_retries - 1:
+                raise RuntimeError(f"Unable to insert data after {max_retries} retries.")
+            elif errors:
                 print(f"Encountered errors while inserting rows: {errors}")
                 print(f"Retrying...")
             else: # exit attempt loop if no errors

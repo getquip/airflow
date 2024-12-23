@@ -31,6 +31,7 @@ def ingest_data(
     data = endpoint_kwargs.get("data", None)
     json_data = endpoint_kwargs.get("json_data", None)
     headers = endpoint_kwargs.get("headers", ingestion_metadata.get("headers"))
+    chunk_size = endpoint_kwargs.get("chunk_size", 8000)
 
     ## GCS Destination
     bucket_name = ingestion_metadata.get("gcs_bucket_name", "airflow_outputs")
@@ -56,5 +57,5 @@ def ingest_data(
     log.info(f"Uploaded data to GCS location...{bucket_path}")
     
     # Land data in BigQuery
-    post_to_bigquery.upload_to_bigquery(project_id, dataset_name, endpoint, bigquery_metadata, records)
+    post_to_bigquery.upload_to_bigquery(project_id, dataset_name, endpoint, bigquery_metadata, records, chunk_size)
     log.info(f"Completed data ingestion for {dataset_name}'s {endpoint} endpoint.")
