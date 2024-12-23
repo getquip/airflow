@@ -24,6 +24,8 @@ jobs:
     # 1. Checkout the code to access the files in the PR
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # Fetch full history
 
     # 2. Set up Python environment to run validation
     - name: Set up Python environment
@@ -40,8 +42,9 @@ jobs:
     - name: Find new or modified DAGs
       id: find_dags
       run: |
-        # Get the list of changed files in the PR using GitHub API
-        echo "changed_files=$(git diff --name-only -r HEAD^1 HEAD | xargs)" >> $GITHUB_OUTPUT
+        # Get changed files between base and head
+        git fetch origin ${{ github.event.pull_request.base.ref }}
+        echo "changed_files=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)" >> $GITHUB_OUTPUT
 
         # List the changed files
         for file in ${{ steps.changed-files.outputs.changed_files }}; do
