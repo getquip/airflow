@@ -63,9 +63,10 @@ jobs:
           # Loop through the changed files and filter out the new/modified DAG files
           for file in "${changed_files_array[@]}"; do
             if [[ "$file" == dags/* ]]; then # Check if the file starts with "dags/"
+              echo "$file"
               ignore_file=false
               for pattern in "${ignore_patterns[@]}"; do # Check if the file is not in the ignore list
-                if [[ "$file" == $pattern ]]; then
+                if [[ "$file" =~ $pattern ]]; then
                   ignore_file=true
                   break
                 fi
