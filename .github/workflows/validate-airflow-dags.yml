@@ -37,15 +37,14 @@ jobs:
       - name: Upgrade pip
         run: |
           python -m pip install --upgrade pip
-    
-      # 4. Change to the dags directory
-      - name: Change directory to dags
-        run: cd dags
 
       # 5. Find new or modified scripts in the `dags/` directory
       - name: Find new or modified DAGs
         id: find_dags
         run: |
+          # Change to the dags directory
+          cd dags
+
           # Fetch base branch to compare with the PR's head
           git fetch origin ${{ github.event.pull_request.base.ref }}
           
