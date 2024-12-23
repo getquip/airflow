@@ -104,10 +104,19 @@ jobs:
           pip install apache-airflow[cncf.kubernetes]
           pip install -r requirements.txt
 
-      # 6. Validate if any new DAG scripts are valid
+      # 6 Authenticate with Google Cloud SDK
+      - name: Authenticate with Google Cloud SDK
+        if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
+        run: |
+          echo ${{ secrets.GCP_CREDENTIALS }} > gcp-credentials.json
+          gcloud auth activate-service-account --key-file=gcp-credentials.json
+          gcloud config set project quip-dw-raw-dev
+
+      # 7. Validate if any new DAG scripts are valid
       - name: Validate new DAGs
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
+          airflow db init
           # Read the space-separated string into an array
           IFS=' ' read -r -a new_dags <<< "$new_dags"
 
@@ -116,8 +125,6 @@ jobs:
             echo "Validating DAG: $dag_file"
 
             # Validate the DAG file
-            python -c "from airflow.models import DagBag; dag_bag = DagBag(include_examples = False); print(list(dag_bag.dags.keys())); assert dag_bag.dags.get('$dag_file'); assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
+            python -c "from airflow.models import DagBag;from airflow.models import Variable; Variable.set("PROJECT_ID", "test");Variable.set("GCS_BUCKET", "test"); dag_bag = DagBag(include_examples = False); print(list(dag_bag.dags.keys())); assert dag_bag.dags.get('$dag_file'); assert not dag_bag.import_errors, dag_bag.import_errors " || exit 1
           done
-
-
 
