@@ -1,5 +1,48 @@
-google-cloud-storage==2.10.0  # For working with GCP Storage
-google-cloud-secret-manager==2.16.0  # For accessing Secrets Manager
-google-cloud-bigquery==3.13.0  # For BigQuery access and operations
-pandas==2.1.1  # Core library for data manipulation and analysis
-numpy==1.24.3  # NumPy for array operations (required by Pandas)
+# airflow
+
+## Getting Started  
+
+1. **Create a Virtual Environment**  
+    A virtual environment isolates your project dependencies from the system Python installation, preventing version conflicts and ensuring a consistent development environment.
+   
+   Run the following command in your terminal to set up a virtual environment:  
+   ```bash
+   python3.9 -m venv venv
+   ```
+
+2. **Activate the Virtual Environment**  
+   Use the appropriate command for your operating system:  
+   - On macOS/Linux:  
+     ```bash
+     source venv/bin/activate
+     ```  
+   - On Windows:  
+     ```bash
+     venv\Scripts\activate
+     ```
+
+3. **Install Dependencies**  
+   Install the required packages by running:  
+   ```bash
+   pip3 install -r requirements.txt
+   ```  
+
+## Naming Conventions
+
+**get__**
+DAGs with this prefix are exclusively used to GET data from the data source and deliver the data to our internal data warehouse.
+
+**post__**
+DAGs with this prefix are exclusively used to GET data from the data warehouse and deliver the data to an external destination.
+
+## Best Practices
+
+### Storing in Google Cloud Storage (GCS)
+We store our json responses in GCS using the following structure:
+
+`PROJECT_NAME/airflow/FUNCTION/NAME_OF_DAG/file`
+
+Example:
+    - DAG named `get__recharge`
+    - `quip-dw-raw-dev/quip_airflow/get/recharge/file`
+    - `quip-dw-raw/quip_airflow/get/recharge/file`
