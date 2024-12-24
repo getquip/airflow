@@ -101,11 +101,11 @@ json_data = [ # Example JSON data
 ]
 
 # Generate BigQuery schema from the JSON data
-schema = infer_schema_from_json(json_data)
+schema = infer_schema_from_json(records)
 
 # Write the schema to a text file in JSON format
 dataset_name = "recharge"
-table_name = "events"
-with open(f"bigquery_destination_schemas/{dataset_name}/{table_name}.json", "w") as file:
+table_name = "discounts"
+with open(f"clients/{dataset_name}/{table_name}.json", "w") as file:
     json.dump(schema, file, indent=4)
 

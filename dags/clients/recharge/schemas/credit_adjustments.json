@@ -53,5 +53,9 @@
 			}
 		]
 
-	}
+	},
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    }
 ]

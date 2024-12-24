@@ -1,126 +1,41 @@
+# Standard library imports
 from datetime import datetime
+import json
+
+# Third-party imports
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
+
+# Local package imports
 from custom_packages import airbud
+from clients.recharge.paginate import paginate_responses
+
 
 # Define constants for data source
+PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
+GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
 DATA_SOURCE_NAME = "recharge"
 BASE_URL = "https://api.rechargeapps.com/"
 INGESTION_METADATA = {
-    "project_id": Variable.get("project_id"),
+    "project_id": PROJECT_ID,
     "dataset_name": DATA_SOURCE_NAME,
     "base_url": BASE_URL,
-    "gcs_bucket_name": Variable.get("GCS_OUTPUT_BUCKET_NAME")
+    "gcs_bucket_name": GCS_BUCKET,
 }
 
 # Update headers with API key
 SECRET_PREFIX = "api__"
-API_KEY = airbud.get_secrets(Variable.get("project_id"), DATA_SOURCE_NAME, SECRET_PREFIX)
+API_KEY = airbud.get_secrets(PROJECT_ID, DATA_SOURCE_NAME, SECRET_PREFIX)
 INGESTION_METADATA["headers"] = {
     "X-Recharge-Access-Token": API_KEY['api_key'],
     "X-Recharge-Version": "2021-11"
 }
-# Pagination constants: https://developer.rechargepayments.com/2021-11/cursor_pagination
-PAGINATION_ARGS = {
-    "pagination_key": "next_cursor",
-    "pagination_query":"page_info"
-}
 
 # Postman Collection: https://quipdataeng.postman.co/workspace/quip_data_eng~9066eadd-c088-4794-8fc6-2774ed80218c/collection/39993065-1e67e281-3311-4b9e-b207-d5154c7339cf?action=share&creator=39993065
-ENDPOINT_KWARGS = {
-    "events": {
-        "jsonl_path": "events",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "created_at",
-            "clustering_fields": ["object_type", "verb", "customer_id", "id"]
-        }
-    },
-    "credit_accounts": {
-        "jsonl_path": "credit_accounts",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "updated_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "updated_at",
-            "clustering_fields": ["name", "type", "customer_id", "id"]
-        }
-    },
-    "credit_adjustments": {
-        "jsonl_path": "credit_adjustments",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "updated_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "updated_at",
-            "clustering_fields": ["type", "credit_account_id", "id"]
-        }
-    },
-    "customers": {
-        "jsonl_path": "customers",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "created_at",
-            "clustering_fields": ["accepts_marketing", "status","id"]
-        }
-    },
-    "charges": {
-        "jsonl_path": "charges",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "created_at",
-            "clustering_fields": ["status", "shipments_count", "customer_id", "id"]
-        }
-    },
-    "discounts": {
-        "jsonl_path": "discounts",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "created_at",
-            "clustering_fields": ["duration","status", "discount_type", "id"]
-        }
-    },
-    "subscriptions": {
-        "jsonl_path": "subscriptions",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "updated_at",
-            "clustering_fields": ["status", "sku", "customer_id", "id"]
-        }
-    },
-}
+with open("clients/recharge/endpoint_kwargs.json", "r") as file:
+	ENDPOINT_KWARGS = json.load(file)
+
 
 # Define the DAG
 default_args = {
@@ -152,7 +67,7 @@ with DAG(
                 "endpoint": endpoint,  
                 "endpoint_kwargs": ENDPOINT_KWARGS.get(endpoint),
                 "paginate": True,   
-                "pagination_args": PAGINATION_ARGS
+                "pagination_function": paginate_responses
             },
             dag=dag
         )

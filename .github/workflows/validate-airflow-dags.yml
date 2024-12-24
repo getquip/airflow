@@ -8,78 +8,128 @@ on:
       - synchronize   # Trigger when new commits are added to an open PR
       - reopened      # Trigger when a PR is reopened
       - ready_for_review # Trigger when a PR is marked as ready for review
-  pull_request_review:
-    types:
-      - submitted     # Trigger when a review is submitted
-    # Only trigger on approved reviews
-    if: ${{ github.event.review.state == 'approved' }}  # Ensures it only triggers when the PR is approved
 
 env:
   AIRFLOW_VERSION: "2.10.2"  # Match the Airflow version in Composer 
   GH_TOKEN: ${{ github.token }}  # GitHub token to access the PR files
+  GCS_BUCKET_NAME: ${{ secrets.AIRFLOW_DEV_BUCKET }}
+  GCP_PROJECT_ID: ${{ secrets.GCP_DEV_PROJECT_ID }}  
+  GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
   
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout the code to access the files in the PR
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # 1. Checkout the code to access the files in the PR
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch full history
 
-    # 2. Set up Python environment to run validation
-    - name: Set up Python environment
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'  # Set up Python 3.9 (or your preferred version)
+      # 2. Set up Python environment to run validation
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'  # Set up Python 3.9 (or your preferred version)
 
-    # 3. Ensure the latest version of pip is installed
-    - name: Upgrade pip
-      run: |
-        python -m pip install --upgrade pip
-
-    # 4. Find new or modified scripts in the `dag/` directory
-    - name: Find new or modified DAGs
-      id: find_dags
-      run: |
-        # Get the list of changed files in the PR using GitHub API
-        changed_files=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path')
-        
-        # Filter for scripts in the `dag/` folder that are not in `.airflowignore`
-        if [ -f .airflowignore ]; then
-          new_dag_files=$(echo "$changed_files" | grep "^dag/.*\.py$" | grep -v -F -f .airflowignore || true)
-        else
-          new_dag_files=$(echo "$changed_files" | grep "^dag/.*\.py$" || true)
-        fi
-
-        # Check if there are no new/modified DAG files
-        if [ -z "$new_dag_files" ]; then
-          echo "No new or modified DAG files. Exiting workflow."
-          exit 0  # Exit the workflow if no new DAG files are found
-        fi
-
-        echo "New or modified DAG files:"
-        echo "$new_dag_files"
-        
-        # Save the list of new/modified DAG files as an environment variable
-        echo "new_dags=$new_dag_files" >> $GITHUB_ENV
-
-    # 5. Install the correct version of Apache Airflow
-    - name: Install Airflow
-      if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
-      run: |
-        CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
-        pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
-
-    # 6. Validate if any new DAG scripts are valid
-    - name: Validate new DAGs
-      if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
-      run: |
-        # Loop through each DAG file and validate
-        IFS=' ' read -r -a dag_files <<< "$new_dags"
-        for dag_file in "${dag_files[@]}"; do
-          echo "Validating DAG: $dag_file"
+      # 3. Find new or modified scripts in the `dags/` directory
+      - name: Find new or modified DAGs
+        id: find_dags
+        run: |
+          # Change to the repository directory
+          cd dags
           
-          # Validate if the DAG file can be imported
-          python -c "from airflow.models import DagBag; dag_bag = DagBag(dag_folder='dag/'); assert not dag_bag.import_errors, dag_bag.import_errors" || exit 1
-        done
+          # Fetch base branch to compare with the PR's head
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          
+          # Get changed files between base and head
+          changed_files=$(git diff --name-only --diff-filter=ACMRTUXB origin/${{ github.event.pull_request.base.ref }}...${{ github.event.pull_request.head.sha }} | xargs)
+
+          # Convert the space-separated string into an array
+          IFS=' ' read -r -a changed_files_array <<< "$changed_files"
+
+          # Get patters from .airflowignore
+          mapfile -t ignore_patterns < .airflowignore
+
+          # Initialize an empty array for new DAG files
+          new_dag_files=()
+
+          # Loop through the changed files and filter out the new/modified DAG files
+          for file in "${changed_files_array[@]}"; do
+            # Check if the file starts with "dags/" and is not the .airflowignore file
+            if [[ "$file" == dags/* ]] && [[ "$file" != dags/.airflowignore ]]; then 
+              ignore_file=false
+
+              # Check if the file is in the ignore list
+              for pattern in "${ignore_patterns[@]}"; do
+                if [[ "$file" =~ $pattern ]]; then
+                  ignore_file=true
+                  break
+                fi
+              done
+
+              # If no match found, add the file to the new_dag_files array
+              if [ "$ignore_file" = false ]; then
+                dag_name="${file/dags\//}" # Remove the 'dags/' prefix
+                new_dag_files+=("$dag_name")
+              fi
+            fi
+          done
+
+          # Check if there are no new/modified DAG files
+          if [ -z "$new_dag_files" ]; then
+            echo "No new or modified DAG files. Exiting workflow."
+            exit 0  # Exit the workflow if no new DAG files are found
+          fi
+
+          echo "New or modified DAG files:"
+          echo "${new_dag_files[@]}"
+        
+          # Save the list of new/modified DAG files as an environment variable
+          echo "new_dags=${new_dag_files[*]}" >> $GITHUB_ENV
+
+      # 4. Install the correct version of Apache Airflow
+      - name: Install Airflow and other dependencies
+        if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
+        run: |
+          python -m pip install --upgrade pip
+          CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-3.9.txt"
+          pip install "apache-airflow==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
+          pip install apache-airflow[virtualenv]
+          pip install apache-airflow[cncf.kubernetes]
+          pip install -r requirements.txt
+
+      # 5 Authenticate with Google Cloud SDK
+      - name: Authenticate with Google Cloud SDK
+        if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
+        run: |
+          echo $GCP_CREDENTIALS_JSON > gcp_key.json
+          gcloud auth activate-service-account --key-file=gcp_key.json
+          gcloud config set project $GCP_PROJECT_ID
+
+      # 6. Validate if any new DAG scripts are valid
+      - name: Validate new DAGs
+        if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
+        run: |
+          airflow db migrate
+          # Read the space-separated string into an array
+          IFS=' ' read -r -a new_dags <<< "$new_dags"
+
+          # Loop through each DAG file and validate
+          for dag_file in "${new_dags[@]}"; do
+            echo "Validating DAG: $dag_file"
+
+            # Validate the DAG file
+            python -c "from airflow.models import DagBag;dag_bag = DagBag(dag_folder='None',include_examples = False); dag_bag.process_file('$dag_file'); print(dag_bag.import_errors); assert not dag_bag.import_errors" || exit 1
+
+            echo "DAG $dag_file is valid."
+          done
+
+# Step 6 Breakdown
+# The last step in the workflow validates the new or modified DAG files.
+# The script loops through each DAG file and validates it using the `DagBag` class from the Airflow library.
+# The `DagBag` class is used to process a DAG file and check for any import errors.
+# dag_bag is initialized with an empty path so that only 1 dag file is processed at a time.
+# If there are any import errors, the script exits with a non-zero status code, indicating that the DAG file is invalid.
+# If all DAG files are valid, the script prints a success message for each DAG file.

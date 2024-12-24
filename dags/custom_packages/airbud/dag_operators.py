@@ -1,7 +1,7 @@
 
-from custom_packages.airbud.get_data import *
-from custom_packages.airbud.post_to_bigquery import *
-from custom_packages.airbud.post_to_gcs import *
+from custom_packages.airbud import get_data
+from custom_packages.airbud import post_to_bigquery
+from custom_packages.airbud import post_to_gcs
 from logging import getLogger
 
 log = getLogger(__name__)
@@ -11,7 +11,8 @@ def ingest_data(
     endpoint: str,  # API endpoint
     endpoint_kwargs: dict, # Endpoint-specific arguments
     paginate=False,    # Initialize pagination flag
-    pagination_args=None,  # Initialize pagination arguments
+    pagination_function=None,  # Initialize pagination arguments
+    **kwargs
 ):
     """
     Ingest data from a Recharge API endpoint into Google Cloud Storage and BigQuery.
@@ -30,6 +31,7 @@ def ingest_data(
     data = endpoint_kwargs.get("data", None)
     json_data = endpoint_kwargs.get("json_data", None)
     headers = endpoint_kwargs.get("headers", ingestion_metadata.get("headers"))
+    chunk_size = endpoint_kwargs.get("chunk_size", 8000)
 
     ## GCS Destination
     bucket_name = ingestion_metadata.get("gcs_bucket_name", "airflow_outputs")
@@ -40,22 +42,20 @@ def ingest_data(
     # Get data
     if paginate:
         log.info("Paginating data...")
-        records, last_page = paginate_responses(url, headers, jsonl_path, params, data, json_data, pagination_args)
+        # Parse pagination paramters
+        parameters = params or data or json_data or {}
+        records = pagination_function(endpoint, url, headers, parameters, **kwargs)
     else:
-        response = get_data(url, headers, params, json_data, data)
+        response = get_data.get_data(url, headers, params, json_data, data)
         response_json = response.json()
         # Parse data (select specific path
         records = response_json if jsonl_path is None else response_json.get(jsonl_path)
     log.info(f"Completed data fetch...")
     
     # Upload raw data to GCS
-    upload_json_to_gcs(project_id, records, bucket_name, bucket_path, destination_blob_name)
-    log.info(f"Uploaded data to GCS...")
+    records = post_to_gcs.upload_json_to_gcs(project_id, records, bucket_name, bucket_path, destination_blob_name)
+    log.info(f"Uploaded data to GCS location...{bucket_path}")
     
     # Land data in BigQuery
-    upload_to_bigquery(project_id, dataset_name, endpoint, bigquery_metadata, records)
+    post_to_bigquery.upload_to_bigquery(project_id, dataset_name, endpoint, bigquery_metadata, records, chunk_size)
     log.info(f"Completed data ingestion for {dataset_name}'s {endpoint} endpoint.")
-    
-    # Save last page for next run, if applicable
-    if paginate:
-        store_bookmark_for_next_page(url, last_page)
