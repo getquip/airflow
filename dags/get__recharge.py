@@ -4,7 +4,7 @@ from airflow.models import Variable
 from custom_packages import airbud
 from clients.recharge.paginate import paginate_responses
 import json
-import datetime
+from datetime import datetime
 
 # Define constants for data source
 PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
