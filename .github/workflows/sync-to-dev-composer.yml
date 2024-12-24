@@ -8,7 +8,7 @@ on:
       - airflow_development 
 
 env:
-  GCS_BUCKET_NAME: ${{ secrets.AIRFLOW_DEV_BUCKET }
+  GCS_BUCKET_NAME: ${{ secrets.AIRFLOW_DEV_BUCKET }}
 
 jobs:
   deploy:
