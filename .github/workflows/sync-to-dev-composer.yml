@@ -37,7 +37,8 @@ jobs:
     - name: Push entire repo to GCS
       if: github.event.pull_request.merged == true
       run: |
-            AIRFLOW_BUCKET="gs://$GCS_BUCKET_NAME"
-            gsutil -m rsync -r --exclude ".git/**" --exclude ".github/**" ./ $AIRFLOW_BUCKET
+            AIRFLOW_BUCKET="gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
+            gsutil rsync -r . $AIRFLOW_BUCKET
+
 
 
