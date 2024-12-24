@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: '3.9'  # Set up Python 3.9 (or your preferred version)
 
-      # 4. Find new or modified scripts in the `dags/` directory
+      # 3. Find new or modified scripts in the `dags/` directory
       - name: Find new or modified DAGs
         id: find_dags
         run: |
@@ -89,7 +89,7 @@ jobs:
           # Save the list of new/modified DAG files as an environment variable
           echo "new_dags=${new_dag_files[*]}" >> $GITHUB_ENV
 
-      # 5. Install the correct version of Apache Airflow
+      # 4. Install the correct version of Apache Airflow
       - name: Install Airflow and other dependencies
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
@@ -100,7 +100,7 @@ jobs:
           pip install apache-airflow[cncf.kubernetes]
           pip install -r requirements.txt
 
-      # 6 Authenticate with Google Cloud SDK
+      # 5 Authenticate with Google Cloud SDK
       - name: Authenticate with Google Cloud SDK
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
@@ -108,7 +108,7 @@ jobs:
           gcloud auth activate-service-account --key-file=gcp_key.json
           gcloud config set project $GCP_PROJECT_ID
 
-      # 7. Validate if any new DAG scripts are valid
+      # 6. Validate if any new DAG scripts are valid
       - name: Validate new DAGs
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
@@ -121,7 +121,7 @@ jobs:
             echo "Validating DAG: $dag_file"
 
             # Validate the DAG file
-            python -c "from airflow.models import DagBag;dag_bag = DagBag(include_examples = False); dag_bag.process_file('$dag_file'); assert dag_bag.import_errors" || exit 1
+            python -c "from airflow.models import DagBag;dag_bag = DagBag(include_examples = False); dag_bag.process_file('$dag_file'); print(dag_bag.import_errors); assert dag_bag.import_errors" || exit 1
 
             echo "DAG $dag_file is valid."
           done
