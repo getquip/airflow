@@ -28,7 +28,11 @@
    ```  
 
 ## Naming Conventions
+### Project Name
+**quip-dw-raw-dev** is the default GCP project name when the function is to land raw data into the datawarehouse and the DAG is under development.
+**quip-dw-raw** is the production version of `quip-dw-raw-dev`
 
+### Functions
 **get__**
 DAGs with this prefix are exclusively used to GET data from the data source and deliver the data to our internal data warehouse.
 
@@ -40,9 +44,10 @@ DAGs with this prefix are exclusively used to GET data from the data warehouse a
 ### Storing in Google Cloud Storage (GCS)
 We store our json responses in GCS using the following structure:
 
-`PROJECT_NAME/airflow/FUNCTION/NAME_OF_DAG/file`
+`PROJECT_NAME/quip_airflow/FUNCTION/NAME_OF_DAG/file`
 
 Example:
+
     - DAG named `get__recharge`
-    - `quip-dw-raw-dev/quip_airflow/get/recharge/file`
+    - `quip-dw-raw-dev/quip_airflow_dev/get/recharge/file`
     - `quip-dw-raw/quip_airflow/get/recharge/file`

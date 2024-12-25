@@ -95,3 +95,4 @@ with DAG(
 
     # Set task dependencies
     download_endpoint_kwargs >> create_ingest_tasks  # First download, then create ingestion tasks
+
