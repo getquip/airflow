@@ -8,7 +8,7 @@ on:
       - airflow_development 
 
 env:
-  AIRFLOW_BUCKET: "gs:/${{ secrets.AIRFLOW_DEV_BUCKET }}"
+  AIRFLOW_BUCKET: "gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
 
 jobs:
   deploy:
@@ -30,22 +30,11 @@ jobs:
         project_id: ${{ secrets.GCP_DEV_PROJECT_ID }} 
         credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
-    - name: Remove Unwanted Files to Sync
+    - name: Push dags/ to GCS
       if: github.event.pull_request.merged == true
       run: |
-            find . -name ".DS_Store" -delete
-            find . -name ".git*" -delete
-            find . -name "gha-creds.*" -delete
-
-    - name: Push entire repo to GCS
-      if: github.event.pull_request.merged == true
-      run: |
-            gcloud storage rsync ./ $AIRFLOW_BUCKET \
+            gcloud storage rsync dags/ $AIRFLOW_BUCKET \
             --recursive \
-<<<<<<< HEAD
-=======
-            --exclude "\.DS_Store" \
-            --exclude "\.git.*" \
-            --exclude "gha-creds.*"
+            --exclude=".DS_Store"
 
->>>>>>> 69053c29dc8e15bc196147a6961c69756d74eb55
+            gcloud storage cp requirements.txt $AIRFLOW_BUCKET/requirements.txt
