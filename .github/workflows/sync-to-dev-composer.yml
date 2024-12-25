@@ -38,6 +38,6 @@ jobs:
       if: github.event.pull_request.merged == true
       run: |
             AIRFLOW_BUCKET="gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
-            gcloud storage rsync ./ $AIRFLOW_BUCKET --recursive --exclude=".DS_Store" --exclude=".git*" --exclude="gha-creds.*"
+            gcloud storage rsync ./ $AIRFLOW_BUCKET --recursive --exclude=".*DS_Store" --exclude=".*git*" --exclude="gha-creds.*"
 
 
