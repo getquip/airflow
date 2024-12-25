@@ -33,7 +33,7 @@ jobs:
     - name: Push dags/ to GCS
       if: github.event.pull_request.merged == true
       run: |
-            gcloud storage rsync dags/ $AIRFLOW_BUCKET \
+            gcloud storage rsync dags/ $AIRFLOW_BUCKET/dags \
             --recursive \
             --exclude=".DS_Store"
 
