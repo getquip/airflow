@@ -33,6 +33,10 @@ jobs:
     - name: Push entire repo to GCS
       if: github.event.pull_request.merged == true
       run: |
+<<<<<<< HEAD
             gcloud storage rsync ./ $AIRFLOW_BUCKET --recursive --exclude="\.DS_Store" --exclude="\.git.*" --exclude="gha-creds.*"
 
 
+=======
+            gcloud storage rsync ./ $AIRFLOW_BUCKET --recursive --exclude="\.DS_Store" --exclude="\.git(?:hub)?" --exclude="gha-creds.*"
+>>>>>>> 801b5ddb029d57d1ef5608f7ad4f66e14aac6cd5
