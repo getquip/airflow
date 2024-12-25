@@ -35,9 +35,6 @@ jobs:
       run: |
             gcloud storage rsync ./ $AIRFLOW_BUCKET \
             --recursive \
-<<<<<<< HEAD
-            --exclude=["\.DS_Store", "\.git.*", "gha-creds.*"]
-=======
-            --exclude=[\.DS_Store", "\.git.*", "gha-creds.*"]
-
->>>>>>> c0da588a0ee0a9a8b34c9ffe88837d64773cf965
+            --exclude "\.DS_Store" \
+            --exclude "\.git.*" \
+            --exclude "gha-creds.*"
