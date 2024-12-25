@@ -30,14 +30,12 @@ jobs:
         project_id: ${{ secrets.GCP_DEV_PROJECT_ID }} 
         credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
+
     - name: Push dags/ to GCS
       if: github.event.pull_request.merged == true
       run: |
             gcloud storage rsync dags/ $AIRFLOW_BUCKET \
             --recursive \
-<<<<<<< HEAD
             --exclude=".DS_Store"
 
             gcloud storage cp requirements.txt $AIRFLOW_BUCKET/requirements.txt
-=======
->>>>>>> eae8a9805834495c021967a34ee34be4b96314cf
