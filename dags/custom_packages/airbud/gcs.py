@@ -5,16 +5,15 @@ from typing import List, Dict
 from datetime import timezone, datetime
 
 
-def upload_json_to_gcs(project_id: str, json_data: List[Dict], bucket_name: str, bucket_path: str, destination_blob_name: dict) -> None:
+def upload_json_to_gcs(
+        project_id: str, 
+        json_data: List[Dict], 
+        bucket_name: str, 
+        bucket_path: str, 
+        destination_blob_name: dict
+    ) -> None:
     """
     Upload JSON data to Google Cloud Storage (GCS).
-
-    Args:
-        project_id (str): The ID of the GCP project.
-        json_data (List[Dict]): The JSON data to upload.
-        bucket_name (str): The name of the GCS bucket.
-        bucket_path (str): The path within the bucket to store the data.
-        destination_blob_name (str): The name of the destination blob.
     """
     # Convert each object in the list of json to a json string
     def yield_jsonl():
@@ -42,3 +41,32 @@ def upload_json_to_gcs(project_id: str, json_data: List[Dict], bucket_name: str,
     utc_time = dt.replace(tzinfo=timezone.utc)
     df['source_synced_at'] = str(utc_time)
     return json.loads(df.to_json(orient='records', lines=False))
+
+def get_file_from_gcs(
+        project_id: str, 
+        bucket_name: str, 
+        object_name: str, 
+        file_type: str
+    ) -> None:
+    """
+    Download a file from Google Cloud Storage (GCS).
+    """
+    # Initialize the GCS client
+    client = storage.Client(project_id)
+    # Get the GCS bucket object
+    bucket = client.get_bucket(bucket_name)
+    
+    # Get the blob object
+    blob = bucket.blob(object_name)
+
+    if file_type == 'json':
+        # Download the blob content as text (assuming the file is JSON)
+        file_content = blob.download_as_text()
+        file = json.loads(file_content)
+        print(f"Downloaded and parsed JSON file from GCS: {object_name}.")
+    else:
+        # Download the blob content as a byte string
+        file_content = blob.download_as_string()
+        file = file_content.decode('utf-8')
+        print(f"Downloaded file from GCS: {object_name}.")
+    return file

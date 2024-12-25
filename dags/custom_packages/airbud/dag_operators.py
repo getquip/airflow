@@ -1,7 +1,7 @@
 
 from custom_packages.airbud import get_data
 from custom_packages.airbud import post_to_bigquery
-from custom_packages.airbud import post_to_gcs
+from custom_packages.airbud import gcs
 from logging import getLogger
 
 log = getLogger(__name__)
