@@ -47,6 +47,7 @@ We store our json responses in GCS using the following structure:
 `PROJECT_NAME/quip_airflow/FUNCTION/NAME_OF_DAG/file`
 
 Example:
+
     - DAG named `get__recharge`
-    - `quip-dw-raw-dev/quip_airflow/get/recharge/file`
+    - `quip-dw-raw-dev/quip_airflow_dev/get/recharge/file`
     - `quip-dw-raw/quip_airflow/get/recharge/file`
