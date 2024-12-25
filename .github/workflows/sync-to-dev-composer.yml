@@ -5,7 +5,7 @@ on:
     types:
       - closed # The workflow triggers when the PR is closed (merged or rejected)
     branches:
-      - airflow_development 
+      - airflow-development 
 
 env:
   AIRFLOW_BUCKET: "gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
@@ -29,7 +29,6 @@ jobs:
       with:
         project_id: ${{ secrets.GCP_DEV_PROJECT_ID }} 
         credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
-
 
     - name: Push dags/ to GCS
       if: github.event.pull_request.merged == true

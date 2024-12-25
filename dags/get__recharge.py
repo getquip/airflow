@@ -33,7 +33,7 @@ INGESTION_METADATA["headers"] = {
 }
 
 # Postman Collection: https://quipdataeng.postman.co/workspace/quip_data_eng~9066eadd-c088-4794-8fc6-2774ed80218c/collection/39993065-1e67e281-3311-4b9e-b207-d5154c7339cf?action=share&creator=39993065
-with open("clients/recharge/endpoint_kwargs.json", "r") as file:
+with open("dags/clients/recharge/endpoint_kwargs.json", "r") as file:
 	ENDPOINT_KWARGS = json.load(file)
 
 
