@@ -64,7 +64,6 @@ with DAG(
     )
 
     # Define tasks and run them all in parallel
-    @task
     def ingest_data_from_endpoint(**kwargs):
         # Load endpoint_kwargs from the downloaded file
         with open("/tmp/endpoint_kwargs.json", 'r') as file:
@@ -87,8 +86,12 @@ with DAG(
             tasks.append(task)
         return tasks
     
-    # Create a task to generate ingestion tasks dynamically
-    create_ingest_tasks = ingest_data_from_endpoint()
+    # Create ingestion tasks from each endpoint (in parallel)
+    create_ingest_tasks = PythonOperator(
+        task_id='create_ingest_tasks',
+        python_callable=ingest_data_from_endpoint,
+        dag=dag
+    )
 
     # Set task dependencies
     download_endpoint_kwargs >> create_ingest_tasks  # First download, then create ingestion tasks
