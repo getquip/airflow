@@ -55,24 +55,20 @@ with DAG(
     
     # Task to download the 'endpoint_kwargs.json' file from GCS to local filesystem
     # Postman Collection: https://quipdataeng.postman.co/workspace/quip_data_eng~9066eadd-c088-4794-8fc6-2774ed80218c/collection/39993065-1e67e281-3311-4b9e-b207-d5154c7339cf?action=share&creator=39993065
-    download_endpoint_kwargs = PythonOperator(
-        task_id=f"download_endpoint_kwargs", 
-        provide_context=True, 
-        python_callable=airbud.ingest_data,
-        op_kwargs={
-            "project_id": PROJECT_ID, 
-            "bucket_name": GCS_BUCKET, 
-            "object_name": "clients/{DATA_SOURCE_NAME}/endpoint_kwargs.json", 
-            "file_type": "json"
-        },
-        dag=dag
+    download_endpoint_kwargs = GCSDownloadFileOperator(
+        task_id="download_endpoint_kwargs",
+        bucket_name=GCS_BUCKET,
+        object_name="clients/{DATA_SOURCE_NAME}/endpoint_kwargs.json",  # GCS file path
+        local_file="/tmp/endpoint_kwargs.json",  # Local path to save the file
+        dag=dag,
     )
 
     # Define tasks and run them all in parallel
+    @task
     def ingest_data_from_endpoint(**kwargs):
-       # Pull the JSON data from XCom (from the previous task)
-        ti = kwargs['ti']
-        ENDPOINT_KWARGS = ti.xcom_pull(task_ids='download_endpoint_kwargs')
+        # Load endpoint_kwargs from the downloaded file
+        with open("/tmp/endpoint_kwargs.json", 'r') as file:
+            ENDPOINT_KWARGS = json.load(file)
 
         tasks = []
         for endpoint, endpoint_kwargs in ENDPOINT_KWARGS.items():
@@ -88,14 +84,11 @@ with DAG(
                 },
                 dag=dag
             )
+            tasks.append(task)
+        return tasks
     
-    # Create ingestion tasks from each endpoint (in parallel)
-    create_ingest_tasks = PythonOperator(
-        task_id='create_ingest_tasks',
-        python_callable=ingest_data_from_endpoint,
-        provide_context=True,  # Provide context to access XCom
-        dag=dag
-    )
+    # Create a task to generate ingestion tasks dynamically
+    create_ingest_tasks = ingest_data_from_endpoint()
 
     # Set task dependencies
     download_endpoint_kwargs >> create_ingest_tasks  # First download, then create ingestion tasks

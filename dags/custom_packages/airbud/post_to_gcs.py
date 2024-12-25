@@ -41,32 +41,3 @@ def upload_json_to_gcs(
     utc_time = dt.replace(tzinfo=timezone.utc)
     df['source_synced_at'] = str(utc_time)
     return json.loads(df.to_json(orient='records', lines=False))
-
-def get_file_from_gcs(
-        project_id: str, 
-        bucket_name: str, 
-        object_name: str, 
-        file_type: str
-    ) -> None:
-    """
-    Download a file from Google Cloud Storage (GCS).
-    """
-    # Initialize the GCS client
-    client = storage.Client(project_id)
-    # Get the GCS bucket object
-    bucket = client.get_bucket(bucket_name)
-    
-    # Get the blob object
-    blob = bucket.blob(object_name)
-
-    if file_type == 'json':
-        # Download the blob content as text (assuming the file is JSON)
-        file_content = blob.download_as_text()
-        file = json.loads(file_content)
-        print(f"Downloaded and parsed JSON file from GCS: {object_name}.")
-    else:
-        # Download the blob content as a byte string
-        file_content = blob.download_as_string()
-        file = file_content.decode('utf-8')
-        print(f"Downloaded file from GCS: {object_name}.")
-    return file
