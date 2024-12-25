@@ -5,16 +5,15 @@ from typing import List, Dict
 from datetime import timezone, datetime
 
 
-def upload_json_to_gcs(project_id: str, json_data: List[Dict], bucket_name: str, bucket_path: str, destination_blob_name: dict) -> None:
+def upload_json_to_gcs(
+        project_id: str, 
+        json_data: List[Dict], 
+        bucket_name: str, 
+        bucket_path: str, 
+        destination_blob_name: dict
+    ) -> None:
     """
     Upload JSON data to Google Cloud Storage (GCS).
-
-    Args:
-        project_id (str): The ID of the GCP project.
-        json_data (List[Dict]): The JSON data to upload.
-        bucket_name (str): The name of the GCS bucket.
-        bucket_path (str): The path within the bucket to store the data.
-        destination_blob_name (str): The name of the destination blob.
     """
     # Convert each object in the list of json to a json string
     def yield_jsonl():
