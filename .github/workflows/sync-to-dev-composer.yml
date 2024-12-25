@@ -35,6 +35,9 @@ jobs:
       run: |
             gcloud storage rsync dags/ $AIRFLOW_BUCKET \
             --recursive \
+<<<<<<< HEAD
             --exclude=".DS_Store"
 
             gcloud storage cp requirements.txt $AIRFLOW_BUCKET/requirements.txt
+=======
+>>>>>>> eae8a9805834495c021967a34ee34be4b96314cf
