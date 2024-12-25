@@ -8,8 +8,8 @@ on:
       - airflow_production # Only trigger for PRs targeting airflow_production
 
 env:
-  AIRFLOW_DEV_BUCKET: "gs:/${{ secrets.AIRFLOW_DEV_BUCKET }}"
-  AIRFLOW_PROD_BUCKET: "gs:/${{ secrets.AIRFLOW_PROD_BUCKET }}"
+  AIRFLOW_DEV_BUCKET: "gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
+  AIRFLOW_PROD_BUCKET: "gs://${{ secrets.AIRFLOW_PROD_BUCKET }}"
 
 jobs:
   deploy:
