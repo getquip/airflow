@@ -2,7 +2,7 @@ import requests
 import json
 from typing import Dict, List
 import time
-#from airflow.models import Variable
+from airflow.models import Variable
 
 def get_data(
         url: str, # The URL of the API endpoint
