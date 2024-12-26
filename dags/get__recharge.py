@@ -5,7 +5,6 @@ import json
 # Third-party imports
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.providers.google.cloud.operators.gcs import GCSDownloadFileOperator
 from airflow.models import Variable
 
 # Local package imports
@@ -16,23 +15,16 @@ from clients.recharge.paginate import paginate_responses
 # Define constants for data source
 PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
 GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
+HOST_GCS_BUCKET = Variable.get("HOST_GCS_BUCKET")
 DATA_SOURCE_NAME = "recharge"
 BASE_URL = "https://api.rechargeapps.com/"
-INGESTION_METADATA = {
-    "project_id": PROJECT_ID,
-    "dataset_name": DATA_SOURCE_NAME,
-    "base_url": BASE_URL,
-    "gcs_bucket_name": GCS_BUCKET,
-}
 
 # Update headers with API key
-SECRET_PREFIX = "api__"
-API_KEY = airbud.get_secrets(PROJECT_ID, DATA_SOURCE_NAME, SECRET_PREFIX)
-INGESTION_METADATA["headers"] = {
+API_KEY = airbud.get_secrets(PROJECT_ID, DATA_SOURCE_NAME, SECRET_PREFIX="api__")
+HEADERS = {
     "X-Recharge-Access-Token": API_KEY['api_key'],
     "X-Recharge-Version": "2021-11"
 }
-
 
 # Define the DAG
 default_args = {
@@ -55,11 +47,13 @@ with DAG(
     
     # Task to download the 'endpoint_kwargs.json' file from GCS to local filesystem
     # Postman Collection: https://quipdataeng.postman.co/workspace/quip_data_eng~9066eadd-c088-4794-8fc6-2774ed80218c/collection/39993065-1e67e281-3311-4b9e-b207-d5154c7339cf?action=share&creator=39993065
-    download_endpoint_kwargs = GCSDownloadFileOperator(
-        task_id="download_endpoint_kwargs",
-        bucket_name=GCS_BUCKET,
-        object_name="clients/{DATA_SOURCE_NAME}/endpoint_kwargs.json",  # GCS file path
-        local_file="/tmp/endpoint_kwargs.json",  # Local path to save the file
+    download_client_files = PythonOperator(
+        task_id="download_client_files",
+        python_callable=airbud.download_client_files,
+        op_kwargs={
+            "bucket_name": HOST_GCS_BUCKET,
+            "prefix": DATA_SOURCE_NAME
+        },
         dag=dag,
     )
 
@@ -67,15 +61,18 @@ with DAG(
     def ingest_data_from_endpoint(**kwargs):
         # Load endpoint_kwargs from the downloaded file
         with open("/tmp/endpoint_kwargs.json", 'r') as file:
-            ENDPOINT_KWARGS = json.load(file)
+            ENDPOINTS = json.load(file)
 
         tasks = []
-        for endpoint, endpoint_kwargs in ENDPOINT_KWARGS.items():
+        for endpoint, endpoint_kwargs in ENDPOINTS.items():
+            endpoint_kwargs["headers"] = HEADERS # Add headers
             task = PythonOperator(
                 task_id=f"ingesting_data_from_{endpoint}_endpoint", 
                 python_callable=airbud.ingest_data,
                 op_kwargs={
-                    "ingestion_metadata": INGESTION_METADATA,
+                    "project_id": PROJECT_ID,
+                    "dataset_name": DATA_SOURCE_NAME,
+                    "gcs_bucket": GCS_BUCKET,
                     "endpoint": endpoint,  
                     "endpoint_kwargs": endpoint_kwargs,
                     "paginate": True,   
