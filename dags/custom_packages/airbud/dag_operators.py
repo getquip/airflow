@@ -7,7 +7,8 @@ from custom_packages.airbud import post_to_bigquery
 from custom_packages.airbud import post_to_gcs
 
 # Initialize logger
-log = getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+log = logging.getLogger(__name__)
 
 def ingest_data(
     project_id: str,  # GCP project ID
