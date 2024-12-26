@@ -41,7 +41,7 @@ def create_table_if_not_exists(
     except Exception as e:
         print(f"Table '{endpoint}' does not exist'. Creating it now...")
         # Get the destination schema from the JSON file
-        schema = client.schema_from_json(f"clients/{dataset_name}/schemas/{endpoint}.json")
+        schema = client.schema_from_json(f"tmp/{endpoint}.json")
         
         # Create table object
         table = bigquery.Table(table_ref, schema=schema)
