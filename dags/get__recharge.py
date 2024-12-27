@@ -10,6 +10,7 @@ from airflow.utils.task_group import TaskGroup
 
 # Custom package imports
 from custom_packages.cleanup import cleanup_xcom
+from custom_packages.notifications import CallbackNotifier
 from custom_packages import airbud
 from clients.recharge import GetRecharge
 
@@ -30,6 +31,10 @@ default_args = {
     "email_on_retry": False,
     "retries": 1,
 }
+
+# add slack bot to the DAG
+if 'dev' not in PROJECT_ID:
+    default_args['on_failure_callback'] = CallbackNotifier().on_failure_callback
 
 with DAG(
     dag_id = "get__recharge",
