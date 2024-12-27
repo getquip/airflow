@@ -48,7 +48,7 @@ records = airbud.post_to_gcs.upload_json_to_gcs(PROJECT_ID, records, INGESTION_M
 i = 11000
 while True:
     try:
-        airbud.post_to_bigquery.upload_to_bigquery(PROJECT_ID, DATA_SOURCE_NAME, endpoint, ENDPOINT_KWARGS[endpoint]['bigquery_metadata'], records[i:i+1000])
+        airbud.post_to_bq.upload_to_bigquery(PROJECT_ID, DATA_SOURCE_NAME, endpoint, ENDPOINT_KWARGS[endpoint]['bigquery_metadata'], records[i:i+1000])
         i += 1000
     except Exception as e:
         print(i)

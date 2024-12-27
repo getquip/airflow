@@ -5,10 +5,11 @@ import pandas as pd
 import json
 
 # Local package imports
-from custom_packages import airbud
+from custom_packages.airbud import GetClient
+from custom_packages.airbud.get_data import *
 
 
-class GetRecharge(airbud.GetClient):
+class GetRecharge(GetClient):
     def __init__(self, auth: str):
         super().__init__() # Initialize the parent class
         self.dataset = "recharge"
@@ -38,21 +39,21 @@ class GetRecharge(airbud.GetClient):
         # Get last bookmark
         if endpoint == "events":
             # For the `events` endpoint, paginate without filters until the last ingested event_id is found
-            last_event_id = airbud.get_next_page_from_last_dag_run("recharge__events")
+            last_event_id = get_next_page_from_last_dag_run("recharge__events")
         else:
             # For endpoints where data is updated in place, paginate using the `updated_at` field
-            last_updated_at = airbud.get_next_page_from_last_dag_run(f"recharge__{endpoint}")
+            last_updated_at = get_next_page_from_last_dag_run(f"recharge__{endpoint}")
             if last_updated_at:
                 params["updated_at"] = f">{last_updated_at}"
 
         # Paginate through the API endpoint and create a list of records
         records = []
         while True:
-            response = airbud.get_data(url, headers, params, None, None)
+            response = get_data(url, headers, params, None, None)
             
             # Check for Rate Limiting or other errors
             if response.status_code != 200:
-                response = airbud.retry_get_data(url, headers, params, None, None)
+                response = retry_get_data(url, headers, params, None, None)
             
             # Parse response for records and append to records list
             response_json = response.json()
@@ -78,12 +79,10 @@ class GetRecharge(airbud.GetClient):
         # Store bookmark for next run
         if endpoint == "events":
             max_event_created_at = df.created_at.max()
-            last_event_id = df[df.created_at == max_event_created_at].id.max()
-            airbud.store_next_page_across_dags("recharge__events", last_event_id)
+            next_page = df[df.created_at == max_event_created_at].id.max()
         else:
             df = pd.DataFrame(records)
-            last_updated_at = df["updated_at"].max()
-            airbud.store_next_page_across_dags(f"recharge__{endpoint}", last_updated_at)
-        return records
+            next_page = df["updated_at"].max()
+        return records, next_page
 
     
