@@ -1,10 +1,5 @@
 {
     "events": {
-        "params": {},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
         "bigquery_metadata": {
             "partitioning_type": "DAY",
             "partitioning_field": "created_at",
@@ -12,11 +7,6 @@
         }
     },
     "credit_accounts": {
-        "params": {},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "updated_at"
-        },
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
             "partitioning_field": "updated_at",
@@ -24,11 +14,6 @@
         }
     },
     "credit_adjustments": {
-        "params": {},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "updated_at"
-        },
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
             "partitioning_field": "updated_at",
@@ -36,10 +21,6 @@
         }
     },
     "customers": {
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
             "partitioning_field": "created_at",
@@ -47,11 +28,6 @@
         }
     },
     "charges": {
-        "params": {},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
             "partitioning_field": "created_at",
@@ -60,11 +36,6 @@
         "chunk_size": 1000
     },
     "discounts": {
-        "params": {},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
             "partitioning_field": "created_at",
@@ -72,11 +43,6 @@
         }
     },
     "subscriptions": {
-        "params": {},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
             "partitioning_field": "updated_at",
