@@ -42,7 +42,7 @@ def retry_get_data(
         elif attempt == max_retries - 1:
             raise RuntimeError(f"API unresponsive after {max_retries} retries.")
         else:
-            if response.status_code != 429:
+            if response.status_code == 429:
                 print(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
             else:
                 print(f"Response: {response.status_code}. Retrying in 10 seconds...")

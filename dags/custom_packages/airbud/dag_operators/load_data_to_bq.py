@@ -29,65 +29,67 @@ def load_data_to_bq(
     Upload JSON data to BigQuery.
     """
     # Get records from file or API
-    records = gcs.get_records_from_file(
-        project_id,
-        bucket_name,
-        dataset_name,
-        endpoint,
-        **kwargs
-    )
-    
-    if not records:
-        log.warning(f"No records found for {endpoint}. Skipping load.")
-        return
-
-    # Initialize BigQuery client
-    client = bigquery.Client(project=project_id)
-    
-    # Ensure the destination table exists
-    table_ref = client.dataset(dataset_name).table(endpoint)
     try:
-        client.get_table(table_ref)
+        records = gcs.get_records_from_file(
+            project_id,
+            bucket_name,
+            dataset_name,
+            endpoint,
+            **kwargs
+        )
     except Exception as e:
-        # Dataset and Table creation logic
-        post_to_bq.create_dataset_if_not_exists(client, project_id, dataset_name)
-        post_to_bq.create_table_if_not_exists(client, project_id, dataset_name, endpoint_kwargs, endpoint)
+        log.error(f"Failed to get records from file: {e}")
+        records = []
+    
+    if len(records) > 0:
+        # Initialize BigQuery client
+        client = bigquery.Client(project=project_id)
         
-        # Retry logic for table availability
-        max_retries = 5
-        for attempt in range(max_retries):
-            try:
-                client.get_table(table_ref)
-                log.info(f"Table {endpoint} is now available.")
-                break
-            except Exception:
-                if attempt == max_retries - 1:
-                    raise RuntimeError(f"Table {endpoint} not found after {max_retries} retries.")
-                log.warning(f"Table {endpoint} not found. Retrying in 5 seconds...")
-                time.sleep(5)
-
-    # Insert rows into BigQuery in chunks
-    max_retries = 3
-    chunk_size = endpoint_kwargs.get("chunk_size", 8000)
-    for i in range(0, len(records), chunk_size):
-        chunk = records[i:i + chunk_size]
-        for attempt in range(max_retries):
-            try:
-                errors = client.insert_rows_json(table_ref, chunk)
-                if errors:
-                    log.error(f"Encountered errors while inserting rows: {errors}")
-                    raise RuntimeError(f"Insertion failed for chunk {i}-{i+chunk_size}")
-                else:
-                    log.info(f"Successfully inserted chunk {i}-{i+chunk_size}.")
+        # Ensure the destination table exists
+        table_ref = client.dataset(dataset_name).table(endpoint)
+        try:
+            client.get_table(table_ref)
+        except Exception as e:
+            # Dataset and Table creation logic
+            post_to_bq.create_dataset_if_not_exists(client, project_id, dataset_name)
+            post_to_bq.create_table_if_not_exists(client, project_id, dataset_name, endpoint_kwargs, endpoint)
+            
+            # Retry logic for table availability
+            max_retries = 5
+            for attempt in range(max_retries):
+                try:
+                    client.get_table(table_ref)
+                    log.info(f"Table {endpoint} is now available.")
                     break
-            except Exception as e:
-                log.warning(f"Retrying due to error: {e}")
-                if attempt == max_retries - 1:
-                    raise RuntimeError(f"Unable to insert data after {max_retries} retries.")
-                time.sleep(5)
+                except Exception:
+                    if attempt == max_retries - 1:
+                        raise RuntimeError(f"Table {endpoint} not found after {max_retries} retries.")
+                    log.warning(f"Table {endpoint} not found. Retrying in 5 seconds...")
+                    time.sleep(5)
 
-    log.info(f"Successfully inserted {len(records)} rows into {endpoint}.")
+        # Insert rows into BigQuery in chunks
+        max_retries = 3
+        chunk_size = endpoint_kwargs.get("chunk_size", 8000)
+        for i in range(0, len(records), chunk_size):
+            chunk = records[i:i + chunk_size]
+            for attempt in range(max_retries):
+                try:
+                    errors = client.insert_rows_json(table_ref, chunk)
+                    if errors:
+                        log.error(f"Encountered errors while inserting rows: {errors}")
+                        raise RuntimeError(f"Insertion failed for chunk {i}-{i+chunk_size}")
+                    else:
+                        log.info(f"Successfully inserted chunk {i}-{i+chunk_size}.")
+                        break
+                except Exception as e:
+                    log.warning(f"Retrying due to error: {e}")
+                    if attempt == max_retries - 1:
+                        raise RuntimeError(f"Unable to insert data after {max_retries} retries.")
+                    time.sleep(5)
 
+        log.info(f"Successfully inserted {len(records)} rows into {endpoint}.")
+    else:
+        log.info(f"No records found for {endpoint}. Skipping load.")
     # Store bookmark for endpoint (if applicable)
     if paginate:
         # Get the next_page from XComs (from the upstream task)

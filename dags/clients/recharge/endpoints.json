@@ -1,4 +1,11 @@
 {
+    "credit_adjustments": {
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", 
+            "partitioning_field": "updated_at",
+            "clustering_fields": ["type", "credit_account_id", "id"]
+        }
+    },
     "events": {
         "bigquery_metadata": {
             "partitioning_type": "DAY",
@@ -13,24 +20,17 @@
             "clustering_fields": ["name", "type", "customer_id", "id"]
         }
     },
-    "credit_adjustments": {
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", 
-            "partitioning_field": "updated_at",
-            "clustering_fields": ["type", "credit_account_id", "id"]
-        }
-    },
     "customers": {
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
-            "partitioning_field": "created_at",
+            "partitioning_field": "updated_at",
             "clustering_fields": ["has_valid_payment_method", "subscription_related_charge_streak","subscriptions_active_count", "id"]
         }
     },
     "charges": {
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
-            "partitioning_field": "created_at",
+            "partitioning_field": "updated_at",
             "clustering_fields": ["status", "id"]
         },
         "chunk_size": 1000
@@ -38,7 +38,7 @@
     "discounts": {
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
-            "partitioning_field": "created_at",
+            "partitioning_field": "updated_at",
             "clustering_fields": ["external_discount_source","status", "code", "id"]
         }
     },
