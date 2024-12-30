@@ -7,11 +7,6 @@ on:
     branches:
       - airflow-development
   workflow_dispatch: 
-    inputs:
-      branch:
-        description: 'Branch to deploy from'
-        required: true
-        default: 'airflow-development' # Default to airflow-development if not provided 
 
 env:
   AIRFLOW_BUCKET: "gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
