@@ -39,6 +39,7 @@ jobs:
             --exclude=".DS_Store"
 
             gcloud storage cp requirements.txt $AIRFLOW_BUCKET/requirements.txt
+
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ always() && (needs.failing-job.result == 'failure' || needs.failing-job.result == 'timed_out') }}
@@ -53,3 +54,4 @@ jobs:
         SLACK_TITLE: Workflow ${{ needs.deploy.result }}
         MSG_MINIMAL: actions url
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+
