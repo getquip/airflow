@@ -41,6 +41,9 @@ jobs:
     - name: Push entire repo to GCS
       if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
       run: |
+        echo "Development bucket: $AIRFLOW_DEV_BUCKET"
+        echo "Production bucket: $AIRFLOW_PROD_BUCKET"
+
             echo "Syncing repository to GCS production bucket"
             gcloud storage rsync gs://$AIRFLOW_DEV_BUCKET gs://$AIRFLOW_PROD_BUCKET --recursive
 
