@@ -5,7 +5,7 @@ on:
     types:
       - closed # Triggers when a pull request is closed (merged or rejected)
     branches:
-      - airflow_production # Only trigger for PRs targeting airflow-production
+      - airflow-production # Only trigger for PRs targeting airflow-production
       
   workflow_dispatch: 
 
