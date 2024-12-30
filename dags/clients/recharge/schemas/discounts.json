@@ -1,0 +1,150 @@
+[
+    {
+        "name": "id",
+        "type": "INTEGER"
+    },
+    {
+        "name": "applies_to",
+        "type": "RECORD",
+        "fields": [
+            {
+                "name": "ids",
+                "type": "STRING",
+                "mode": "REPEATED"
+            },
+            {
+                "name": "purchase_item_type",
+                "type": "STRING"
+            },
+            {
+                "name": "resource",
+                "type": "STRING",
+                "mode": "NULLABLE"
+            }
+        ]
+    },
+    {
+        "name": "channel_settings",
+        "type": "RECORD",
+        "fields": [
+            {
+                "name": "api",
+                "type": "RECORD",
+                "fields": [
+                    {
+                        "name": "can_apply",
+                        "type": "BOOLEAN"
+                    }
+                ]
+            },
+            {
+                "name": "checkout_page",
+                "type": "RECORD",
+                "fields": [
+                    {
+                        "name": "can_apply",
+                        "type": "BOOLEAN"
+                    }
+                ]
+            },
+            {
+                "name": "customer_portal",
+                "type": "RECORD",
+                "fields": [
+                    {
+                        "name": "can_apply",
+                        "type": "BOOLEAN"
+                    }
+                ]
+            },
+            {
+                "name": "merchant_portal",
+                "type": "RECORD",
+                "fields": [
+                    {
+                        "name": "can_apply",
+                        "type": "BOOLEAN"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "name": "code",
+        "type": "STRING"
+    },
+    {
+        "name": "created_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "ends_at",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "external_discount_id",
+        "type": "RECORD",
+        "fields": [
+            {
+                "name": "ecommerce",
+                "type": "STRING"
+            }
+        ]
+    },
+    {
+        "name": "external_discount_source",
+        "type": "STRING"
+    },
+    {
+        "name": "prerequisite_subtotal_min",
+        "type": "STRING",
+        "mode": "NULLABLE"
+    },
+    {
+        "name": "starts_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "status",
+        "type": "STRING"
+    },
+    {
+        "name": "updated_at",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "usage_limits",
+        "type": "RECORD",
+        "fields": [
+            {
+                "name": "automatic_redemptions_per_customer",
+                "type": "INTEGER"
+            },
+            {
+                "name": "first_time_customer_restriction",
+                "type": "BOOLEAN"
+            },
+            {
+                "name": "max_subsequent_redemptions",
+                "type": "INTEGER"
+            },
+            {
+                "name": "one_application_per_customer",
+                "type": "BOOLEAN"
+            }
+        ]
+    },
+    {
+        "name": "value",
+        "type": "STRING"
+    },
+    {
+        "name": "value_type",
+        "type": "STRING"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "STRING"
+    }
+]

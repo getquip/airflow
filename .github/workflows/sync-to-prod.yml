@@ -1,0 +1,37 @@
+name: Deploy on Merge to Production
+
+on:
+  pull_request:
+    types:
+      - closed # Triggers when a pull request is closed (merged or rejected)
+    branches:
+      - airflow_production # Only trigger for PRs targeting airflow-production
+
+env:
+  AIRFLOW_DEV_BUCKET: "gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
+  AIRFLOW_PROD_BUCKET: "gs://${{ secrets.AIRFLOW_PROD_BUCKET }}"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Only proceed if the PR was merged
+    - name: Check if PR was merged
+      if: github.event.pull_request.merged == true
+      run: echo "PR was merged, proceeding with deployment."
+
+    - name: Set up Google Cloud SDK
+      if: github.event.pull_request.merged == true
+      uses: 'google-github-actions/auth@v2'
+      with:
+        project_id: ${{ secrets.GCP_DEV_PROJECT_ID }} 
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Push entire repo to GCS
+      if: github.event.pull_request.merged == true
+      run: |
+            gcloud storage rsync $AIRFLOW_DEV_BUCKET $AIRFLOW_PROD_BUCKET --recursive

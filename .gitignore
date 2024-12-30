@@ -1,1 +1,4 @@
 venv/
+myenv/
+.DS_Store
+dags/tmp/

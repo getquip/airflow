@@ -1,126 +1,26 @@
+# Standard library imports
 from datetime import datetime
+import json
+
+# Third-party imports
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
+from airflow.utils.task_group import TaskGroup
+
+# Custom package imports
+from custom_packages.cleanup import cleanup_xcom
 from custom_packages import airbud
+from clients.recharge import GetRecharge
+
 
 # Define constants for data source
-DATA_SOURCE_NAME = "recharge"
-BASE_URL = "https://api.rechargeapps.com/"
-INGESTION_METADATA = {
-    "project_id": Variable.get("project_id"),
-    "dataset_name": DATA_SOURCE_NAME,
-    "base_url": BASE_URL,
-    "gcs_bucket_name": Variable.get("GCS_OUTPUT_BUCKET_NAME")
-}
+PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
+GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
 
-# Update headers with API key
-SECRET_PREFIX = "api__"
-API_KEY = airbud.get_secrets(Variable.get("project_id"), DATA_SOURCE_NAME, SECRET_PREFIX)
-INGESTION_METADATA["headers"] = {
-    "X-Recharge-Access-Token": API_KEY['api_key'],
-    "X-Recharge-Version": "2021-11"
-}
-# Pagination constants: https://developer.rechargepayments.com/2021-11/cursor_pagination
-PAGINATION_ARGS = {
-    "pagination_key": "next_cursor",
-    "pagination_query":"page_info"
-}
-
-# Postman Collection: https://quipdataeng.postman.co/workspace/quip_data_eng~9066eadd-c088-4794-8fc6-2774ed80218c/collection/39993065-1e67e281-3311-4b9e-b207-d5154c7339cf?action=share&creator=39993065
-ENDPOINT_KWARGS = {
-    "events": {
-        "jsonl_path": "events",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "created_at",
-            "clustering_fields": ["object_type", "verb", "customer_id", "id"]
-        }
-    },
-    "credit_accounts": {
-        "jsonl_path": "credit_accounts",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "updated_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "updated_at",
-            "clustering_fields": ["name", "type", "customer_id", "id"]
-        }
-    },
-    "credit_adjustments": {
-        "jsonl_path": "credit_adjustments",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "updated_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "updated_at",
-            "clustering_fields": ["type", "credit_account_id", "id"]
-        }
-    },
-    "customers": {
-        "jsonl_path": "customers",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "created_at",
-            "clustering_fields": ["accepts_marketing", "status","id"]
-        }
-    },
-    "charges": {
-        "jsonl_path": "charges",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "created_at",
-            "clustering_fields": ["status", "shipments_count", "customer_id", "id"]
-        }
-    },
-    "discounts": {
-        "jsonl_path": "discounts",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "created_at",
-            "clustering_fields": ["duration","status", "discount_type", "id"]
-        }
-    },
-    "subscriptions": {
-        "jsonl_path": "subscriptions",
-        "params": {"limit": 250},
-        "destination_blob_name": {
-            "dag_run_date": "{{ ds }}",
-            "date_range": "created_at"
-        },
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", # DAY, MONTH, YEAR
-            "partitioning_field": "updated_at",
-            "clustering_fields": ["status", "sku", "customer_id", "id"]
-        }
-    },
-}
+# Initialize the GetRecharge class
+API_KEY = airbud.get_secrets(PROJECT_ID, 'recharge', prefix="api__")
+recharge = GetRecharge(API_KEY['api_key'])
 
 # Define the DAG
 default_args = {
@@ -135,24 +35,43 @@ with DAG(
     dag_id = "get__recharge",
     default_args=default_args,
     description="A DAG to fetch Recharge data and load into GCS and BigQuery",
-    schedule_interval="@daily",
+    schedule_interval="0 */6 * * *",  # Every 6 hours
     start_date=datetime(2024, 12, 1),
     catchup=False,
     max_active_runs=1,
+    on_success_callback=cleanup_xcom
 ) as dag:
 
-    # Define tasks and run them all in parallel
-    tasks = []
-    for endpoint in ENDPOINT_KWARGS.keys():
-        task = PythonOperator(
-            task_id=f"ingesting_data_from_{endpoint}_endpoint", 
-            python_callable=airbud.ingest_data,
-            op_kwargs={
-                "ingestion_metadata": INGESTION_METADATA,
-                "endpoint": endpoint,  
-                "endpoint_kwargs": ENDPOINT_KWARGS.get(endpoint),
-                "paginate": True,   
-                "pagination_args": PAGINATION_ARGS
-            },
-            dag=dag
-        )
+    # Define ingestion tasks
+    for endpoint, endpoint_kwargs in recharge.endpoints.items():
+        with TaskGroup(group_id=f"get__{endpoint}") as endpoint_group:
+
+            ingestion_task = PythonOperator(
+                task_id= f"ingesting_{endpoint}_data",
+                python_callable=airbud.ingest_data,
+                op_kwargs={
+                    "project_id": PROJECT_ID,
+                    "bucket_name": GCS_BUCKET,
+                    "client": recharge,
+                    "endpoint": endpoint,  
+                    "endpoint_kwargs": endpoint_kwargs,
+                    "paginate": True
+                },
+                dag=dag
+            )
+
+            upload_to_bq_task = PythonOperator(
+                task_id=f"uploading_{endpoint}_data_to_bq",
+                python_callable=airbud.load_data_to_bq,
+                op_kwargs={
+                    "project_id": PROJECT_ID,
+                    "bucket_name": GCS_BUCKET,
+                    "dataset_name": recharge.dataset,
+                    "endpoint": endpoint,
+                    "endpoint_kwargs": endpoint_kwargs,
+                    "paginate": True
+                },
+                dag=dag
+            )
+
+            ingestion_task >> upload_to_bq_task

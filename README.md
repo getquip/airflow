@@ -1,48 +1,69 @@
-# airflow
+# Airflow Project Setup
 
-## Getting Started  
+## Overview
+This repository contains the necessary setup for working with Airflow on Google Cloud Composer. It is used for developing, testing, and deploying Airflow DAGs to our Composer environment.
 
-1. **Create a Virtual Environment**  
-    A virtual environment isolates your project dependencies from the system Python installation, preventing version conflicts and ensuring a consistent development environment.
-   
-   Run the following command in your terminal to set up a virtual environment:  
+## Composer Environments
+There are two Composer environments:
+- **Development**: Used for testing and development purposes.
+- **Production**: Used for production workflows and running DAGs in the live environment.
+
+GitHub Actions workflows determine where to push code based on the GitHub branches:
+- By default, all branches push to the `airflow-development` environment.
+- Only admins have the permission to merge the `development` branch into `airflow-production`.
+
+## Airflow DAGs
+Within the Airflow environment, all DAGs are executed from the `dags/` directory. This directory is pushed directly to the Composer GCS bucket, and the DAGs in it are scheduled and run according to the configuration in the Composer environment.
+
+## Directory Structure
+
+- **`dags/`**  
+  This is the primary directory where all Airflow DAGs are stored. It is pushed directly to the Composer GCS bucket for execution in the cloud environment.
+
+- **`plugins/developer_helpers/`**  
+  This directory contains Python scripts and tools that are helpful for developers during development. These scripts are not intended to be used in Airflow DAGs but can assist in local testing, debugging, and utility functions.
+
+## Getting Started
+
+1. **Clone the repository**  
+   Clone the repository to your local development environment:
    ```bash
-   python3.9 -m venv venv
+   git clone https://github.com/getquip/airflow.git
+   cd airflow
    ```
 
-2. **Activate the Virtual Environment**  
-   Use the appropriate command for your operating system:  
-   - On macOS/Linux:  
-     ```bash
-     source venv/bin/activate
-     ```  
-   - On Windows:  
-     ```bash
-     venv\Scripts\activate
-     ```
+2. **Set up a virtual environment**  
+   It is recommended to set up a virtual environment to isolate your project dependencies:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate  # On macOS/Linux
+   ```
 
-3. **Install Dependencies**  
-   Install the required packages by running:  
+3. **Install dependencies**  
+   Install the required packages:
    ```bash
    pip3 install -r requirements.txt
-   ```  
+   ```
+
+4. **Pushing DAGs to Google Cloud Composer**  
+   Push the DAGs stored in the `dags/` directory to the Composer GCS bucket. Ensure your DAG files are correctly uploaded for execution in the cloud environment.
 
 ## Naming Conventions
 
-**get__**
-DAGs with this prefix are exclusively used to GET data from the data source and deliver the data to our internal data warehouse.
+- **`get__`**  
+  DAGs with this prefix are used to **GET** data from a data source and deliver it to our internal data warehouse.
 
-**post__**
-DAGs with this prefix are exclusively used to GET data from the data warehouse and deliver the data to an external destination.
+- **`post__`**  
+  DAGs with this prefix are used to **POST** data from the data warehouse to an external destination.
 
 ## Best Practices
 
 ### Storing in Google Cloud Storage (GCS)
-We store our json responses in GCS using the following structure:
+We store JSON responses in GCS using the following structure:
 
 `PROJECT_NAME/airflow/FUNCTION/NAME_OF_DAG/file`
 
 Example:
-    - DAG named `get__recharge`
-    - `quip-dw-raw-dev/airflow/get/recharge/file`
-    - `quip-dw-raw/airflow/get/recharge/file`
+  - DAG named `get__recharge`
+  - Stored at: `quip-dw-raw-dev/quip_airflow/get/recharge/file`
+  - GCS path: `quip-dw-raw/quip_airflow/get/recharge/file`

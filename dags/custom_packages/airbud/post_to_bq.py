@@ -37,11 +37,11 @@ def create_table_if_not_exists(
         table_ref = client.dataset(dataset_name).table(endpoint)
         client.get_table(table_ref)
         print(f"Table '{endpoint}' already exists in dataset '{dataset_name}'.")
-
+    
     except Exception as e:
         print(f"Table '{endpoint}' does not exist'. Creating it now...")
         # Get the destination schema from the JSON file
-        schema = client.schema_from_json(f"data/{dataset_name}/{endpoint}.json")
+        schema = client.schema_from_json(f"tmp/{endpoint}.json")
         
         # Create table object
         table = bigquery.Table(table_ref, schema=schema)
@@ -57,7 +57,7 @@ def create_table_if_not_exists(
             type_=partition_by,
             field=bigquery_metadata["partitioning_field"]
         )
-
+        
         # Set clustering
         table.clustering_fields = bigquery_metadata.get("clustering_fields", None)
         
@@ -67,57 +67,3 @@ def create_table_if_not_exists(
             print(f"Table '{endpoint}' created successfully in dataset '{dataset_name}'.")   
         except Exception as e:
             print(f"An error occurred while trying to create the BigQuery table: {e}")
-        
-def upload_to_bigquery(
-        project_id: str,  # Destination Project ID
-        dataset_name: str,  # Destination dataset
-        endpoint: str,  # Destination table
-        bigquery_metadata: dict,  # Metadata for BigQuery table creation
-        records: List[Dict]  # List of JSON objects to insert into BigQuery
-) -> None:
-    """
-    Upload JSON data to BigQuery.
-    """
-    # Initialize BigQuery client
-    client = bigquery.Client(project=project_id)
-    
-    # Ensure the dataset exists
-    create_dataset_if_not_exists(client, project_id, dataset_name)
-    
-    # Ensure the table exists
-    create_table_if_not_exists(client, project_id, dataset_name, bigquery_metadata, endpoint)
-    table_ref = client.dataset(dataset_name).table(endpoint)
-    
-    # Check if the table is available
-    max_retries=5
-    for attempt in range(max_retries):
-        try:
-            client.get_table(table_ref)
-            print(f"Table {endpoint} is now available.")
-            break
-        except Exception as e:
-            if attempt == max_retries - 1:
-                raise RuntimeError(f"Table {endpoint} not found after {max_retries} retries.")
-            print(f"Table {endpoint} not found. Retrying in 5 seconds...")
-            time.sleep(5)
-
-    # Insert rows into BigQuery
-    max_retries=3
-    for attempt in range(max_retries):
-        try:
-            # Insert data in chunks -- insert limit is 10,000 rows
-            chunk_size = 8000
-            for i in range(0, len(records), chunk_size):
-                chunk = records[i:i + chunk_size]
-                errors = client.insert_rows_json(table_ref, chunk)
-                if errors:
-                    print(f"Encountered errors while inserting rows: {errors}")
-                    break
-            print(f"Successfully inserted {len(records)} rows into {endpoint}.")
-            break
-        except Exception as e:
-            if attempt == max_retries - 1:
-                raise RuntimeError(f"Table {endpoint} not found after {max_retries} retries.")
-            print(f"An error occurred: {e}")
-            print(f"Retrying in 5 seconds...")
-            time.sleep(5)

@@ -1,8 +1,8 @@
 import requests
 import json
 from typing import Dict, List
-from airflow.models import Variable
 import time
+from airflow.models import Variable
 
 def get_data(
         url: str, # The URL of the API endpoint
@@ -24,69 +24,45 @@ def get_data(
     )
     return response
 
-def paginate_responses(
+def retry_get_data(
         url: str, # The URL of the API endpoint
-        headers: str, # The request headers
-        jsonl_path: str, # The path to the JSON data within the API response
+        headers: dict, # The request headers
         params: dict, # The query parameters for the request, if any
         data: dict, # The request body data, if any
-        json_data: dict, # The JSON data to send with the request, if any
-        pagination_args: dict# The pagination arguments for the request
-) -> List[Dict]:
+        json_data: dict # The JSON data to send with the request, if any
+) -> object:
     """
-    Paginate through the API endpoint.
+    Retries the API request.
     """
-    # Unpack pagination arguments
-    pagination_key = pagination_args.get("pagination_key")
-    pagination_query = pagination_args.get("pagination_query")
-    records = []
-    last_page = None
-
-    # Initialize next_page
-    try:
-        next_page = Variable.get(url)
-        last_page = next_page
-        print(f"Retrieved next page: {next_page}")
-        params, json_data, data = get_next_page_query(params, json_data, data, pagination_query, next_page)
-    except:
-        print("No next page stored. Starting pagination from the beginning.")
-
-    while True:
-        # Fetch data using get_data function
+    max_retries = 6
+    for attempt in range(max_retries):
         response = get_data(url, headers, params, data, json_data)
-
-        # Check for Rate Limiting
-        if response.status_code == 429:
-            for i in range(6):
-                print(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
-                time.sleep(10)
-                response = get_data(url, headers, params, data, json_data)
-                if response.status_code != 429:
-                    break
-
-        # Parse response for records and append to records list
-        response_json = response.json()
-        if jsonl_path:
-            records.extend(response_json.get(jsonl_path))
-        else:
-            records.extend(response_json)
-
-        # Check if there is another page of data
-        next_page = response_json.get(pagination_key)
-        if next_page:
-            print(f"Fetching next page of data...{next_page}")
-            params, json_data, data = get_next_page_query(params, json_data, data, pagination_query, next_page)
-            last_page = next_page
-        else:
-            print("No more data to fetch.")
+        if response.status_code == 200:
             break
-    return records, last_page
+        elif attempt == max_retries - 1:
+            raise RuntimeError(f"API unresponsive after {max_retries} retries.")
+        else:
+            if response.status_code == 429:
+                print(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
+            else:
+                print(f"Response: {response.status_code}. Retrying in 10 seconds...")
+        time.sleep(10)
+    return response
 
 
 # create next run variable if upload to bigquery is successful
-def store_bookmark_for_next_page(url, last_page):
-        Variable.set(url, last_page)
-        print(f"Next page saved as Airflow Variable.")
+def store_next_page_across_dags(name, last_page):
+        Variable.set(name, last_page)
+        print(f"Last page saved as Airflow Variable named: {name}.")
+
+def get_next_page_from_last_dag_run(name):
+    try:
+        next_page = Variable.get(name)
+        print(f"Retrieved next page: {next_page}")
+    except:
+        print("No next page stored. Starting pagination from the beginning.")
+        next_page = None
+    return(next_page)
 
 def get_next_page_query(params, json_data, data, pagination_query, next_page):
     if params:

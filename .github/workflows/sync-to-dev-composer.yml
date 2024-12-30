@@ -1,0 +1,40 @@
+name: Deploy Airflow Code to GCS-dev
+
+on:
+  pull_request:
+    types:
+      - closed # The workflow triggers when the PR is closed (merged or rejected)
+    branches:
+      - airflow-development 
+
+env:
+  AIRFLOW_BUCKET: "gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Only proceed if the PR was merged
+    - name: Check if PR was merged
+      if: github.event.pull_request.merged == true
+      run: echo "PR was merged, proceeding with deployment."
+
+    - name: Set up Google Cloud SDK
+      if: github.event.pull_request.merged == true
+      uses: 'google-github-actions/auth@v2'
+      with:
+        project_id: ${{ secrets.GCP_DEV_PROJECT_ID }} 
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Push dags/ to GCS
+      if: github.event.pull_request.merged == true
+      run: |
+            gcloud storage rsync dags/ $AIRFLOW_BUCKET/dags \
+            --recursive \
+            --exclude=".DS_Store"
+
+            gcloud storage cp requirements.txt $AIRFLOW_BUCKET/requirements.txt
