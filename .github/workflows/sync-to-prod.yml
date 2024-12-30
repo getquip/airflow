@@ -42,10 +42,8 @@ jobs:
       if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
       run: |
             echo "Syncing repository to GCS production bucket"
-            gcloud storage rsync dags/ $AIRFLOW_PROD_BUCKET/dags --recursive
-            gcloud storage cp requirements.txt $AIRFLOW_PROD_BUCKET/requirements.txt
+            gcloud storage rsync $AIRFLOW_DEV_BUCKET $AIRFLOW_PROD_BUCKET --recursive
 
-  on-failure:
     runs-on: ubuntu-latest
     if: ${{ always() && (needs.failing-job.result == 'failure' || needs.failing-job.result == 'timed_out') }}
     needs:
