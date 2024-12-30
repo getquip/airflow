@@ -60,3 +60,4 @@ jobs:
         SLACK_TITLE: Workflow ${{ needs.deploy.result }}
         MSG_MINIMAL: actions url
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+
