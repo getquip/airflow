@@ -45,6 +45,7 @@ class GetRecharge(GetClient):
             # Only fetch the next day of data
         if last_ts:
             last_ts = pd.to_datetime(last_ts)
+            stop_at = last_ts + pd.Timedelta(days=1)
             if endpoint == "events":
                 params["created_at_min"] = last_ts
             else:
@@ -52,8 +53,10 @@ class GetRecharge(GetClient):
             # If the last updated_at is today, do not pass the updated_at_max parameter
             if last_ts.date() == pd.Timestamp.utcnow().normalize().date():
                 pass
+            # If the stop_at date is today, do not pass the updated_at_max parameter
+            elif stop_at.date() == pd.Timestamp.utcnow().normalize().date():
+                pass
             else:
-                stop_at = last_ts + pd.Timedelta(days=1)
                 if endpoint == "events":
                     params["created_at_max"] = stop_at
                 else:
