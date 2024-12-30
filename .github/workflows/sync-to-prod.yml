@@ -7,11 +7,6 @@ on:
     branches:
       - airflow_production # Only trigger for PRs targeting airflow-production
   workflow_dispatch: 
-    inputs:
-      branch:
-        description: 'Branch to deploy from'
-        required: true
-        default: 'airflow-development' # Default to airflow-development if not provided 
 
 env:
   AIRFLOW_DEV_BUCKET: "gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
@@ -30,18 +25,25 @@ jobs:
       if: github.event.pull_request.merged == true
       run: echo "PR was merged, proceeding with deployment."
 
+    # Check if it's a manual trigger (workflow_dispatch)
+    - name: Check if manual trigger
+      if: github.event_name == 'workflow_dispatch'
+      run: echo "Workflow triggered manually, proceeding with manual deployment steps."
+
+    # Only proceed with these steps if it's a PR merge or workflow_dispatch
     - name: Set up Google Cloud SDK
-      if: github.event.pull_request.merged == true
+      if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
       uses: 'google-github-actions/auth@v2'
       with:
-        project_id: ${{ secrets.GCP_DEV_PROJECT_ID }} 
+        project_id: ${{ secrets.GCP_PROD_PROJECT_ID }} 
         credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
     - name: Push entire repo to GCS
-      if: github.event.pull_request.merged == true
+      if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
       run: |
+            echo "Syncing repository to GCS production bucket"
             gcloud storage rsync $AIRFLOW_DEV_BUCKET $AIRFLOW_PROD_BUCKET --recursive
-  on-failure:
+
     runs-on: ubuntu-latest
     if: ${{ always() && (needs.failing-job.result == 'failure' || needs.failing-job.result == 'timed_out') }}
     needs:
