@@ -44,8 +44,9 @@ jobs:
             echo "Syncing repository to GCS production bucket"
             gcloud storage rsync $AIRFLOW_DEV_BUCKET $AIRFLOW_PROD_BUCKET --recursive
 
+  on-failure:
     runs-on: ubuntu-latest
-    if: ${{ always() && (needs.failing-job.result == 'failure' || needs.failing-job.result == 'timed_out') }}
+    if: ${{ always() && (needs.deploy.result == 'failure' || needs.deploy.result == 'timed_out') }}
     needs:
       - deploy
     steps:
