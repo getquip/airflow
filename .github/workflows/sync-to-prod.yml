@@ -42,7 +42,7 @@ jobs:
       if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
       run: |
             echo "Syncing repository to GCS production bucket"
-            gcloud storage rsync gs://$AIRFLOW_DEV_BUCKET gs://$AIRFLOW_PROD_BUCKET --recursive
+            gcloud storage rsync $AIRFLOW_DEV_BUCKET $AIRFLOW_PROD_BUCKET --recursive
 
   on-failure:
     runs-on: ubuntu-latest
