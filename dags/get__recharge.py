@@ -35,7 +35,7 @@ with DAG(
     dag_id = "get__recharge",
     default_args=default_args,
     description="A DAG to fetch Recharge data and load into GCS and BigQuery",
-    schedule_interval="@daily",
+    schedule_interval="0 */6 * * *",  # Every 6 hours
     start_date=datetime(2024, 12, 1),
     catchup=False,
     max_active_runs=1,

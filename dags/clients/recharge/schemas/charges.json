@@ -593,5 +593,16 @@
 	{
 		"name": "last_charge_attempt",
 		"type": "TIMESTAMP"
+	},
+	{
+		"name": "include",
+		"type": "RECORD",
+		"fields": [
+			{
+				"name": "transactions",
+				"type": "RECORD",
+				"mode": "REPEATED"
+			}
+		]
 	}
 ]

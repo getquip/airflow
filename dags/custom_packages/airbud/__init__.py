@@ -51,15 +51,3 @@ class GetClient:
         
         except Exception as e:
             raise RuntimeError(f"Failed to load schema for '{endpoint}': {e}")
-
-def cleanup_tmp_files(dag_id: str):
-    """
-    Cleanup temporary files in the .tmp directory.
-    """
-    # Delete the directory and all its contents
-    directory = f".tmp/{dag_id}"
-    if os.path.exists(directory):
-        shutil.rmtree(directory)
-        log.info(f"Deleted directory: {directory}")
-    else:
-        log.info(f"Directory {directory} does not exist.")
