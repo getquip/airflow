@@ -24,6 +24,7 @@ def generate_blob_name(
     dag_run: DagRun = kwargs.get('dag_run')
     file_path = f"get/{dataset_name}/{endpoint}"
     dag_run_date = dag_run.execution_date
+    task_name = kwargs['task'].task_id
     filename = f"{file_path}/DAG_RUN:{dag_run_date}.json"
 
     return filename
@@ -56,9 +57,9 @@ def upload_json_to_gcs(
 
     # Upload the JSON data as a string to GCS
     blob = bucket.blob(filename)
-    log.info(f"Uploading data to {filename}...")
+    log.info(f"Uploading data to {filename}")
     blob.upload_from_string(json.dumps(records), content_type='application/json')
-    log.info(f"Uploaded data to GCS location...{filename}")
+    log.info(f"Uploaded data to GCS location...{bucket_name}")
 
 def get_records_from_file(
         project_id: str, 

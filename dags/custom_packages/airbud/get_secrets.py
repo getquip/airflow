@@ -26,7 +26,7 @@ def get_secrets(
         
         # Extract the secret payload
         secret_payload = response.payload.data.decode("UTF-8")
-        log.info(f"Accessed secret: {secret_payload}")
+        log.info(f"Accessed secret successfully.")
         return json.loads(secret_payload)
     
     except Exception as e:

@@ -7,6 +7,9 @@
         }
     },
     "events": {
+        "params": {
+            "object_type": "subscription"
+        },
         "bigquery_metadata": {
             "partitioning_type": "DAY",
             "partitioning_field": "created_at",
@@ -33,7 +36,10 @@
             "partitioning_field": "updated_at",
             "clustering_fields": ["status", "id"]
         },
-        "chunk_size": 1000
+        "chunk_size": 1000,
+        "params": {
+            "include": "transactions"
+        }
     },
     "discounts": {
         "bigquery_metadata": {
@@ -48,5 +54,13 @@
             "partitioning_field": "updated_at",
             "clustering_fields": ["status", "sku", "customer_id", "id"]
         }
-    }
+    },
+    "orders": {
+            "bigquery_metadata": {
+                "partitioning_type": "DAY", 
+                "partitioning_field": "updated_at",
+                "clustering_fields": ["status", "scheduled_at", "updated_at", "id"]
+            },
+            "chunk_size": 1000
+        }
 }

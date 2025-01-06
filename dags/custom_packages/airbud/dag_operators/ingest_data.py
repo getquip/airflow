@@ -50,7 +50,7 @@ def ingest_data(
             key='next_page',
             value=next_page
         )
-        log.info(f"Stored next page for {endpoint} in XComs.")
+        log.info(f"Stored next page for {endpoint} in XComs: {next_page}")
     else:
         response = get_data.get_data(url, headers, params, json_data, data)
         response_json = response.json()

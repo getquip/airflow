@@ -47,7 +47,7 @@ with DAG(
         with TaskGroup(group_id=f"get__{endpoint}") as endpoint_group:
 
             ingestion_task = PythonOperator(
-                task_id= f"ingesting_{endpoint}_data",
+                task_id= f"ingest_{endpoint}_data",
                 python_callable=airbud.ingest_data,
                 op_kwargs={
                     "project_id": PROJECT_ID,
@@ -61,12 +61,12 @@ with DAG(
             )
 
             upload_to_bq_task = PythonOperator(
-                task_id=f"uploading_{endpoint}_data_to_bq",
+                task_id=f"upload_{endpoint}_data_to_bq",
                 python_callable=airbud.load_data_to_bq,
                 op_kwargs={
                     "project_id": PROJECT_ID,
                     "bucket_name": GCS_BUCKET,
-                    "dataset_name": recharge.dataset,
+                    "client": recharge,
                     "endpoint": endpoint,
                     "endpoint_kwargs": endpoint_kwargs,
                     "paginate": True

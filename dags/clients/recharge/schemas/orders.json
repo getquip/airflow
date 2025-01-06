@@ -1,0 +1,552 @@
+[
+	{
+		"name": "id",
+		"type": "INTEGER"
+	},
+	{
+		"name": "address_id",
+		"type": "INTEGER"
+	},
+	{
+		"name": "billing_address_id",
+		"type": "INTEGER"
+	},
+	{
+		"name": "charge",
+		"type": "RECORD",
+		"fields": [
+			{
+				"name": "id",
+				"type": "INTEGER"
+			},
+			{
+				"name": "external_transaction_id",
+				"type": "RECORD",
+				"fields": [
+					{
+						"name": "payment_processor",
+						"type": "STRING"
+					}
+				]
+			},
+			{
+				"name": "payment_processor_name",
+				"type": "STRING"
+			},
+			{
+				"name": "status",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "client_details",
+		"type": "RECORD",
+		"fields": [
+			{
+				"name": "browser_ip",
+				"type": "STRING"
+			},
+			{
+				"name": "user_agent",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "created_at",
+		"type": "TIMESTAMP"
+	},
+	{
+		"name": "currency",
+		"type": "STRING"
+	},
+	{
+		"name": "customer",
+		"type": "RECORD",
+		"fields": [
+			{
+				"name": "id",
+				"type": "INTEGER"
+			},
+			{
+				"name": "email",
+				"type": "STRING"
+			},
+			{
+				"name": "external_customer_id",
+				"type": "RECORD",
+				"fields": [
+					{
+						"name": "ecommerce",
+						"type": "STRING"
+					}
+				]
+			},
+			{
+				"name": "hash",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "discounts",
+		"type": "RECORD",
+		"mode": "REPEATED",
+		"fields": [
+			{
+				"name": "id",
+				"type": "INTEGER"
+			},
+			{
+				"name": "code",
+				"type": "STRING"
+			},
+			{
+				"name": "value",
+				"type": "STRING"
+			},
+			{
+				"name": "value_type",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "external_cart_token",
+		"type": "STRING"
+	},
+	{
+		"name": "external_order_id",
+		"type": "RECORD",
+		"fields": [
+			{
+				"name": "ecommerce",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "external_order_number",
+		"type": "RECORD",
+		"fields": [
+			{
+				"name": "ecommerce",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "external_order_name",
+		"type": "RECORD",
+		"fields": [
+			{
+				"name": "ecommerce",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "is_prepaid",
+		"type": "BOOLEAN"
+	},
+	{
+		"name": "line_items",
+		"type": "RECORD",
+		"mode": "REPEATED",
+		"fields": [
+			{
+				"name": "purchase_item_id",
+				"type": "INTEGER"
+			},
+			{
+				"name": "external_product_id",
+				"type": "RECORD",
+				"fields": [
+					{
+						"name": "ecommerce",
+						"type": "STRING"
+					}
+				]
+			},
+			{
+				"name": "external_variant_id",
+				"type": "RECORD",
+				"fields": [
+					{
+						"name": "ecommerce",
+						"type": "STRING"
+					}
+				]
+			},
+			{
+				"name": "grams",
+				"type": "INTEGER"
+			},
+			{
+				"name": "handle",
+				"type": "STRING"
+			},
+			{
+				"name": "images",
+				"type": "RECORD",
+				"fields": [
+					{
+						"name": "large",
+						"type": "STRING"
+					},
+					{
+						"name": "medium",
+						"type": "STRING"
+					},
+					{
+						"name": "small",
+						"type": "STRING"
+					},
+					{
+						"name": "original",
+						"type": "STRING"
+					},
+					{
+						"name": "sort_order",
+						"type": "STRING"
+					}
+				]
+			},
+			{
+				"name": "original_price",
+				"type": "STRING"
+			},
+			{
+				"name": "external_inventory_policy",
+				"type": "STRING"
+			},
+			{
+				"name": "offer_attributes",
+				"type": "STRING"
+			},
+			{
+				"name": "properties",
+				"type": "RECORD",
+				"mode": "REPEATED",
+				"fields": [
+					{
+						"name": "name",
+						"type": "STRING"
+					},
+					{
+						"name": "value",
+						"type": "STRING"
+					}
+				]
+			},
+			{
+				"name": "purchase_item_type",
+				"type": "STRING"
+			},
+			{
+				"name": "quantity",
+				"type": "INTEGER"
+			},
+			{
+				"name": "sku",
+				"type": "STRING"
+			},
+			{
+				"name": "tax_due",
+				"type": "STRING"
+			},
+			{
+				"name": "tax_lines",
+				"type": "RECORD",
+				"mode": "REPEATED",
+				"fields": [
+					{
+						"name": "price",
+						"type": "STRING"
+					},
+					{
+						"name": "rate",
+						"type": "STRING"
+					},
+					{
+						"name": "title",
+						"type": "STRING"
+					}
+				]
+			},
+			{
+				"name": "taxable",
+				"type": "BOOLEAN"
+			},
+			{
+				"name": "taxable_amount",
+				"type": "STRING"
+			},
+			{
+				"name": "title",
+				"type": "STRING"
+			},
+			{
+				"name": "total_price",
+				"type": "STRING"
+			},
+			{
+				"name": "unit_price",
+				"type": "STRING"
+			},
+			{
+				"name": "variant_title",
+				"type": "STRING"
+			},
+			{
+				"name": "unit_price_includes_tax",
+				"type": "BOOLEAN"
+			}
+		]
+	},
+	{
+		"name": "note",
+		"type": "STRING"
+	},
+	{
+		"name": "order_attributes",
+		"type": "RECORD",
+		"mode": "REPEATED",
+		"fields": [
+			{
+				"name": "name",
+				"type": "STRING"
+			},
+			{
+				"name": "value",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "processed_at",
+		"type": "TIMESTAMP"
+	},
+	{
+		"name": "scheduled_at",
+		"type": "TIMESTAMP"
+	},
+	{
+		"name": "shipping_address",
+		"type": "RECORD",
+        "fields": [
+            { 
+				"name": "address1", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "address2", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "city", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "company", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "country_code", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "first_name", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "last_name", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "phone", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "province", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "zip", 
+				"type": "STRING" 
+			}
+        ]
+	},
+	{
+		"name": "billing_address",
+		"type": "RECORD",
+        "fields": [
+            { 
+				"name": "address1", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "address2", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "city", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "company", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "country_code", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "first_name", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "last_name", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "phone", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "province", 
+				"type": "STRING" 
+			},
+            { 
+				"name": "zip", 
+				"type": "STRING" 
+			}
+        ]
+	},
+	{
+		"name": "shipping_lines",
+		"type": "RECORD",
+		"mode": "REPEATED",
+		"fields": [
+			{
+				"name": "code",
+				"type": "STRING"
+			},
+			{
+				"name": "price",
+				"type": "STRING"
+			},
+			{
+				"name": "source",
+				"type": "STRING"
+			},
+			{
+				"name": "title",
+				"type": "STRING"
+			},
+			{
+				"name": "tax_lines",
+				"type": "RECORD",
+				"mode": "REPEATED",
+				"fields": [
+					{
+						"name": "price",
+						"type": "STRING"
+					},
+					{
+						"name": "rate",
+						"type": "STRING"
+					},
+					{
+						"name": "title",
+						"type": "STRING"
+					}
+				]
+			},
+			{
+				"name": "taxable",
+				"type": "BOOLEAN"
+			}
+		]
+	},
+	{
+		"name": "status",
+		"type": "STRING"
+	},
+	{
+		"name": "subtotal_price",
+		"type": "STRING"
+	},
+	{
+		"name": "tags",
+		"type": "STRING"
+	},
+	{
+		"name": "tax_lines",
+		"type": "RECORD",
+		"mode": "REPEATED",
+		"fields": [
+			{
+				"name": "price",
+				"type": "STRING"
+			},
+			{
+				"name": "rate",
+				"type": "STRING"
+			},
+			{
+				"name": "title",
+				"type": "STRING"
+			}
+		]
+	},
+	{
+		"name": "taxable",
+		"type": "BOOLEAN"
+	},
+	{
+		"name": "total_discounts",
+		"type": "STRING"
+	},
+	{
+		"name": "total_price",
+		"type": "STRING"
+	},
+	{
+		"name": "total_tax",
+		"type": "STRING"
+	},
+	{
+		"name": "updated_at",
+		"type": "TIMESTAMP"
+	},
+	{
+		"name": "total_duties",
+		"type": "STRING"
+	},
+	{
+		"name": "total_line_items_price",
+		"type": "STRING"
+	},
+	{
+		"name": "total_refunds",
+		"type": "STRING"
+	},
+	{
+		"name": "total_weight_grams",
+		"type": "INTEGER"
+	},
+	{
+		"name": "type",
+		"type": "STRING"
+	},
+	{
+		"name": "error",
+		"type": "STRING"
+	},
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	}
+]
