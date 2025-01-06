@@ -47,7 +47,7 @@ with DAG(
         with TaskGroup(group_id=f"get__{endpoint}") as endpoint_group:
 
             ingestion_task = PythonOperator(
-                task_id= f"ingest_{endpoint}_data",
+                task_id= f"ingest_{ endpoint }_data",
                 python_callable=airbud.ingest_data,
                 op_kwargs={
                     "project_id": PROJECT_ID,

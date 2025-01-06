@@ -47,13 +47,13 @@ def retry_get_data(
         if response.status_code == 200:
             break
         elif attempt == max_retries - 1:
-            logging.warn(f"API unresponsive after {max_retries} retries.", exc_info=True)
+            logging.warn(f"API unresponsive after { max_retries } retries.", exc_info=True)
             break
         else:
             if response.status_code == 429:
                 logging.info(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
             else:
-                logging.warn(f"Response: {response.status_code}. Retrying in 10 seconds...")
+                logging.warn(f"Response: { response.status_code }. Retrying in 10 seconds...")
         time.sleep(10)
     return response
 
@@ -61,12 +61,12 @@ def retry_get_data(
 # create next run variable if upload to bigquery is successful
 def store_next_page_across_dags(name, last_page):
         Variable.set(name, last_page)
-        logging.info(f"Last page saved as Airflow Variable named: {name}.")
+        logging.info(f"Last page saved as Airflow Variable named: { name }.")
 
 def get_next_page_from_last_dag_run(name):
     try:
         next_page = Variable.get(name)
-        logging.info(f"Retrieved next page: {next_page}")
+        logging.info(f"Retrieved next page: { next_page }")
     except:
         logging.info("No next page stored. Starting pagination from the beginning.")
         next_page = None

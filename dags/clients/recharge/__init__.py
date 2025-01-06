@@ -89,7 +89,7 @@ class GetRecharge(GetClient):
                     print("No more data to fetch.")
                     break
             else:
-                log.error(f"Pagination halted dye to status code: {response.status_code}")
+                log.error(f"Pagination halted due to status code: {response.status_code}")
                 break
             
         # Store bookmark for next run
