@@ -54,6 +54,9 @@ class GetRecharge(GetClient):
             # If the last updated_at is today, do not pass the updated_at_max parameter
             if last_ts.date() == pd.Timestamp.utcnow().normalize().date() or stop_at.date() == pd.Timestamp.utcnow().normalize().date():
                 pass
+            # If the stop_at date is today, do not pass the updated_at_max parameter
+            elif stop_at.date() == pd.Timestamp.utcnow().normalize().date():
+                pass
             else:
                 if endpoint == "events":
                     params["created_at_max"] = stop_at
