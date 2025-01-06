@@ -38,7 +38,7 @@ for endpoint, kwargs in endpoint_kwargs.items():
     job_config.time_partitioning = bigquery.TimePartitioning(
         type_=bigquery.TimePartitioningType.DAY if partitioning_type.upper() == "DAY" else bigquery.TimePartitioningType.HOUR,
         field=partitioning_field,  # Partition on this column
-        require_partition_filter=True,  # Enforce partition filtering
+        require_partition_filter=False,  # Enforce partition filtering
     )
     
     # Add clustering if specified

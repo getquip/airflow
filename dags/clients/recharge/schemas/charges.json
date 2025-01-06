@@ -156,7 +156,7 @@
 	},
 	{
 		"name": "external_variant_not_found",
-		"type": "BOOLEAN"
+		"type": "STRING"
 	},
     { 
 		"name": "discounts", 
@@ -601,7 +601,37 @@
 			{
 				"name": "transactions",
 				"type": "RECORD",
-				"mode": "REPEATED"
+				"mode": "REPEATED",
+				"field": [
+					{
+						"name": "payment_method_id",
+						"type": "INTEGER"
+					},
+					{
+						"name": "amount",
+						"type": "STRING"
+					},
+					{
+						"name": "created_at",
+						"type": "TIMESTAMP"
+					},
+					{
+						"name": "external_transaction_id",
+						"type": "INTEGER"
+					},
+					{
+						"name": "is_primary",
+						"type": "BOOLEAN"
+					},
+					{
+						"name": "kind",
+						"type": "STRING"
+					},
+					{
+						"name": "processor_name",
+						"type": "STRING"
+					}
+				]
 			}
 		]
 	}

@@ -23,7 +23,8 @@ class GetRecharge(GetClient):
             "X-Recharge-Version": "2021-11",
         }
         # Load endpoints configuration by passing the filename
-        self.endpoints = self.load_endpoints("recharge/endpoints.json")
+        self.endpoints = self.load_endpoints(f"{ self.dataset }/endpoints.json")
+        self.schemas = self.load_endpoint_schemas(self.dataset, self.endpoints.keys())
         
 
     def paginate_responses(
@@ -45,15 +46,18 @@ class GetRecharge(GetClient):
             # Only fetch the next day of data
         if last_ts:
             last_ts = pd.to_datetime(last_ts)
+            stop_at = last_ts + pd.Timedelta(days=1)
             if endpoint == "events":
                 params["created_at_min"] = last_ts
             else:
                 params["updated_at_min"] = last_ts
             # If the last updated_at is today, do not pass the updated_at_max parameter
-            if last_ts.date() == pd.Timestamp.utcnow().normalize().date():
+            if last_ts.date() == pd.Timestamp.utcnow().normalize().date() or stop_at.date() == pd.Timestamp.utcnow().normalize().date():
+                pass
+            # If the stop_at date is today, do not pass the updated_at_max parameter
+            elif stop_at.date() == pd.Timestamp.utcnow().normalize().date():
                 pass
             else:
-                stop_at = last_ts + pd.Timedelta(days=1)
                 if endpoint == "events":
                     params["created_at_max"] = stop_at
                 else:
@@ -70,19 +74,22 @@ class GetRecharge(GetClient):
             # Check for Rate Limiting or other errors
             if response.status_code != 200:
                 response = retry_get_data(url, headers, params, None, None)
-            
-            # Parse response for records and append to records list
-            response_json = response.json()
-            records.extend(response_json.get(endpoint))
-            
-            # Check if there is another page of data
-            next_page = response_json.get("next_cursor")
-            if next_page:
-                # Only pass cursor as params
-                print(f"Fetching next page of data...{next_page}")
-                params = {"cursor": next_page}
+            if response.status_code == 200:
+                # Parse response for records and append to records list
+                response_json = response.json()
+                records.extend(response_json.get(endpoint))
+                
+                # Check if there is another page of data
+                next_page = response_json.get("next_cursor")
+                if next_page:
+                    # Only pass cursor as params
+                    print(f"Fetching next page of data...{next_page}")
+                    params = {"cursor": next_page}
+                else:
+                    print("No more data to fetch.")
+                    break
             else:
-                print("No more data to fetch.")
+                log.error(f"Pagination halted due to status code: {response.status_code}")
                 break
             
         # Store bookmark for next run
@@ -93,7 +100,6 @@ class GetRecharge(GetClient):
             else:
                 next_page = df["updated_at"].max()
         else:
-            # If the last updated_at is today, do not pass the updated_at_max parameter
             if last_ts.date() == pd.Timestamp.utcnow().normalize().date():
                 next_page = None
             else:

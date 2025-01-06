@@ -28,20 +28,22 @@ def create_table_if_not_exists(
         client,
         project_id: str,
         dataset_name: str,
-        bigquery_metadata: dict,
-        endpoint: str
+        endpoint_kwargs: dict,
+        endpoint: str,
+        client_object: object
 ) -> None:
     """Create a BigQuery table if it does not exist."""
     try:
         # Try to fetch the table, if it exists, this will return the table
         table_ref = client.dataset(dataset_name).table(endpoint)
         client.get_table(table_ref)
-        print(f"Table '{endpoint}' already exists in dataset '{dataset_name}'.")
+        print(f"Table '{ endpoint }' already exists in dataset '{ dataset_name }'.")
     
     except Exception as e:
         print(f"Table '{endpoint}' does not exist'. Creating it now...")
+        bigquery_metadata = endpoint_kwargs.get("bigquery_metadata", {})
         # Get the destination schema from the JSON file
-        schema = client.schema_from_json(f"tmp/{endpoint}.json")
+        schema = client_object.schemas[endpoint]
         
         # Create table object
         table = bigquery.Table(table_ref, schema=schema)

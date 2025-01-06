@@ -56,9 +56,9 @@ def upload_json_to_gcs(
 
     # Upload the JSON data as a string to GCS
     blob = bucket.blob(filename)
-    log.info(f"Uploading data to {filename}...")
+    log.info(f"Uploading data to { filename }")
     blob.upload_from_string(json.dumps(records), content_type='application/json')
-    log.info(f"Uploaded data to GCS location...{filename}")
+    log.info(f"Uploaded data to GCS location...{ bucket_name }")
 
 def get_records_from_file(
         project_id: str, 

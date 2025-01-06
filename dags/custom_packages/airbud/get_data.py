@@ -2,7 +2,14 @@ import requests
 import json
 from typing import Dict, List
 import time
+import logging
+
 from airflow.models import Variable
+
+# Initialize logger
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+log = logging.getLogger(__name__)
+
 
 def get_data(
         url: str, # The URL of the API endpoint
@@ -40,12 +47,13 @@ def retry_get_data(
         if response.status_code == 200:
             break
         elif attempt == max_retries - 1:
-            raise RuntimeError(f"API unresponsive after {max_retries} retries.")
+            logging.warn(f"API unresponsive after { max_retries } retries.", exc_info=True)
+            break
         else:
             if response.status_code == 429:
-                print(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
+                logging.info(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
             else:
-                print(f"Response: {response.status_code}. Retrying in 10 seconds...")
+                logging.warn(f"Response: { response.status_code }. Retrying in 10 seconds...")
         time.sleep(10)
     return response
 
@@ -53,14 +61,14 @@ def retry_get_data(
 # create next run variable if upload to bigquery is successful
 def store_next_page_across_dags(name, last_page):
         Variable.set(name, last_page)
-        print(f"Last page saved as Airflow Variable named: {name}.")
+        logging.info(f"Last page saved as Airflow Variable named: { name }.")
 
 def get_next_page_from_last_dag_run(name):
     try:
         next_page = Variable.get(name)
-        print(f"Retrieved next page: {next_page}")
+        logging.info(f"Retrieved next page: { next_page }")
     except:
-        print("No next page stored. Starting pagination from the beginning.")
+        logging.info("No next page stored. Starting pagination from the beginning.")
         next_page = None
     return(next_page)
 
