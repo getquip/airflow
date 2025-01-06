@@ -5,7 +5,8 @@ on:
     types:
       - closed # The workflow triggers when the PR is closed (merged or rejected)
     branches:
-      - airflow-development 
+      - airflow-development
+  workflow_dispatch: 
 
 env:
   AIRFLOW_BUCKET: "gs://${{ secrets.AIRFLOW_DEV_BUCKET }}"
@@ -38,3 +39,19 @@ jobs:
             --exclude=".DS_Store"
 
             gcloud storage cp requirements.txt $AIRFLOW_BUCKET/requirements.txt
+
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ always() && (needs.failing-job.result == 'failure' || needs.failing-job.result == 'timed_out') }}
+    needs:
+      - deploy
+    steps:
+    - uses: actions/checkout@v2
+    - name: Slack Notification
+      uses: rtCamp/action-slack-notify@v2
+      env:
+        SLACK_USERNAME: GHA
+        SLACK_TITLE: Workflow ${{ needs.deploy.result }}
+        MSG_MINIMAL: actions url
+        SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+

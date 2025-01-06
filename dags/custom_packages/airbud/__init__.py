@@ -29,37 +29,25 @@ class GetClient:
             if data is not None:
                 return json.loads(data.decode("utf-8"))
             else:
-                raise FileNotFoundError(f"Could not find '{endpoint_file}' in the package.")
+                raise FileNotFoundError(f"Could not find '{ endpoint_file }' in the package.")
         except Exception as e:
             raise RuntimeError(f"Failed to load endpoints: {e}")
             
-    def get_endpoint_schema(self, endpoint: str) -> Dict:
+    def load_endpoint_schemas(self, client_name, endpoints: List[str]) -> Dict:
         """
         Retrieves the schema for a given endpoint from the schemas directory.
         """
-        schema_file = f"schemas/{endpoint}.json"
-        
-        try:
-            # Load the schema JSON file from the package
-            schema_data = pkgutil.get_data(__package__, schema_file)
-            if schema_data is None:
-                raise FileNotFoundError(f"Schema file '{schema_file}' not found in the package.")
-            
-            # Parse the schema data
-            schema = json.loads(schema_data.decode("utf-8"))
-            return schema
-        
-        except Exception as e:
-            raise RuntimeError(f"Failed to load schema for '{endpoint}': {e}")
+        schemas = {}
+        for endpoint in endpoints:
+            schema_file = f"{ client_name }/schemas/{ endpoint }.json"
+            try:
+                package = self.__module__.split('.')[0]  # Get the package name of the class
+                data = pkgutil.get_data(package, schema_file)  # Try to load the file from the correct package
 
-def cleanup_tmp_files(dag_id: str):
-    """
-    Cleanup temporary files in the .tmp directory.
-    """
-    # Delete the directory and all its contents
-    directory = f".tmp/{dag_id}"
-    if os.path.exists(directory):
-        shutil.rmtree(directory)
-        log.info(f"Deleted directory: {directory}")
-    else:
-        log.info(f"Directory {directory} does not exist.")
+                if data is not None:
+                    schemas[endpoint] = json.loads(data.decode("utf-8"))
+                else:
+                    raise FileNotFoundError(f"Could not find '{ endpoint }' schema in the package.")
+            except Exception as e:
+                raise RuntimeError(f"Failed to load endpoints: {e}")
+        return schemas

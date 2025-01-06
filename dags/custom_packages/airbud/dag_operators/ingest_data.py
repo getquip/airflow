@@ -50,7 +50,7 @@ def ingest_data(
             key='next_page',
             value=next_page
         )
-        log.info(f"Stored next page for {endpoint} in XComs.")
+        log.info(f"Stored next page for { endpoint } in XComs: { next_page }")
     else:
         response = get_data.get_data(url, headers, params, json_data, data)
         response_json = response.json()
@@ -60,11 +60,15 @@ def ingest_data(
     log.info(f"Completed data fetch for {endpoint}...")
 
     # Upload data to GCS
-    gcs.upload_json_to_gcs(
-        project_id,
-        bucket_name,
-        client.dataset,
-        endpoint,
-        records,
-        **kwargs 
-    )
+    if len(records) > 0:
+        log.info(f"Uploading {len(records)} records to GCS...")
+        gcs.upload_json_to_gcs(
+            project_id,
+            bucket_name,
+            client.dataset,
+            endpoint,
+            records,
+            **kwargs 
+        )
+    else:
+        log.info(f"No records to upload for {endpoint}.")

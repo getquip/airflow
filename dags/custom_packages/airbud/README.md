@@ -1,21 +1,14 @@
 # Airbud
-This custom package was developed for reusability of code to ingest data via API endpoint and land data to GCS and BigQuery.
+Airbud is a custom package developed for the reusability of code to ingest data via API endpoints and land data to Google Cloud Storage (GCS) and BigQuery.
 
 ## DAG Operators
-The `dag_operators.py` file contains the main functions that should be used within the Airflow DAGs. The functions should be used with the `PythonOperator()` in order to create an Airflow task.
+The `dag_operators` folder contains the main Python callable functions for the Airflow DAGs. These functions are designed to be used with the `PythonOperator()` in Airflow to create tasks.
 
+## Key Classes
 
-## Data Source Specific
-Though Airbud is a set of python functions that can be reused across different ingestion pipelines, each API has some unique functionality. These variable functionalities are left up to the developer to create in the `airflow/dags/clients/` folder, within the respective resource folder. 
+### `GetClient` Class
+A core class in Airbud is the `GetClient` class. This class is used for specific clients (data sources). Each data source should create a child class that inherits from `GetClient` and contains source-specific attributes and methods. These must include:
+- **paginate_responses**: Custom logic for handling pagination in API responses.
+- **Endpoint kwargs**: Any specific parameters or configurations needed for the data source endpoint.
 
-Example: `airflow/dags/clients/recharge/`
-
-### Pagination
-Every API is different in regards to how the pagination logic works. It is important to define the **pagination function** within the `clients` folder and pass the function to airbud's `ingest_data` function. The default state is no pagination.
-
-The `ingest_data` function will pass the following fields to the custom pagination function:
-- endpoint
-- url
-- headers
-- parameters (either params, data, or json_data)
-- `**kwargs` 
+For example, each data source may have its own class under the `airflow/dags/clients/` folder, such as `airflow/dags/clients/recharge/`.

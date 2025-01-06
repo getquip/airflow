@@ -3,11 +3,15 @@ import pkgutil
 from typing import List, Dict
 import pandas as pd
 import json
+import logging
 
 # Local package imports
 from custom_packages.airbud import GetClient
 from custom_packages.airbud.get_data import *
 
+# Initialize logger
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+log = logging.getLogger(__name__)
 
 class GetRecharge(GetClient):
     def __init__(self, auth: str):
@@ -19,7 +23,8 @@ class GetRecharge(GetClient):
             "X-Recharge-Version": "2021-11",
         }
         # Load endpoints configuration by passing the filename
-        self.endpoints = self.load_endpoints("recharge/endpoints.json")
+        self.endpoints = self.load_endpoints(f"{ self.dataset }/endpoints.json")
+        self.schemas = self.load_endpoint_schemas(self.dataset, self.endpoints.keys())
         
 
     def paginate_responses(
@@ -37,14 +42,29 @@ class GetRecharge(GetClient):
         params["limit"] = 250
 
         # Get last bookmark
-        if endpoint == "events":
-            # For the `events` endpoint, paginate without filters until the last ingested event_id is found
-            last_event_id = get_next_page_from_last_dag_run("recharge__events")
+        last_ts = get_next_page_from_last_dag_run(f"recharge__{endpoint}")
+            # Only fetch the next day of data
+        if last_ts:
+            last_ts = pd.to_datetime(last_ts)
+            stop_at = last_ts + pd.Timedelta(days=1)
+            if endpoint == "events":
+                params["created_at_min"] = last_ts
+            else:
+                params["updated_at_min"] = last_ts
+            # If the last updated_at is today, do not pass the updated_at_max parameter
+            if last_ts.date() == pd.Timestamp.utcnow().normalize().date() or stop_at.date() == pd.Timestamp.utcnow().normalize().date():
+                pass
+            # If the stop_at date is today, do not pass the updated_at_max parameter
+            elif stop_at.date() == pd.Timestamp.utcnow().normalize().date():
+                pass
+            else:
+                if endpoint == "events":
+                    params["created_at_max"] = stop_at
+                else:
+                    params["updated_at_max"] = stop_at
+                log.info(f"Fetching data from {last_ts} to {stop_at}")
         else:
-            # For endpoints where data is updated in place, paginate using the `updated_at` field
-            last_updated_at = get_next_page_from_last_dag_run(f"recharge__{endpoint}")
-            if last_updated_at:
-                params["updated_at"] = f">{last_updated_at}"
+            params["updated_at_max"] = '2024-06-20'
 
         # Paginate through the API endpoint and create a list of records
         records = []
@@ -54,35 +74,36 @@ class GetRecharge(GetClient):
             # Check for Rate Limiting or other errors
             if response.status_code != 200:
                 response = retry_get_data(url, headers, params, None, None)
-            
-            # Parse response for records and append to records list
-            response_json = response.json()
-            records.extend(response_json.get(endpoint))
-            
-            if endpoint == "events":
-                if last_event_id:
-                # Check if last_event_id is in the last response
-                    df = pd.DataFrame(records)
-                    if last_event_id in df.id.values:
-                        print(f"Found last event_id: {last_event_id}")
-                        break
-            
-            # Check if there is another page of data
-            next_page = response_json.get("next_cursor")
-            if next_page:
-                print(f"Fetching next page of data...{next_page}")
-                params["cursor"] = next_page
+            if response.status_code == 200:
+                # Parse response for records and append to records list
+                response_json = response.json()
+                records.extend(response_json.get(endpoint))
+                
+                # Check if there is another page of data
+                next_page = response_json.get("next_cursor")
+                if next_page:
+                    # Only pass cursor as params
+                    print(f"Fetching next page of data...{next_page}")
+                    params = {"cursor": next_page}
+                else:
+                    print("No more data to fetch.")
+                    break
             else:
-                print("No more data to fetch.")
+                log.error(f"Pagination halted due to status code: {response.status_code}")
                 break
             
         # Store bookmark for next run
-        if endpoint == "events":
-            max_event_created_at = df.created_at.max()
-            next_page = df[df.created_at == max_event_created_at].id.max()
-        else:
+        if len(records) > 0:
             df = pd.DataFrame(records)
-            next_page = df["updated_at"].max()
+            if endpoint == "events":
+                next_page = df["created_at"].max()
+            else:
+                next_page = df["updated_at"].max()
+        else:
+            if last_ts.date() == pd.Timestamp.utcnow().normalize().date():
+                next_page = None
+            else:
+                next_page = str(stop_at)
         return records, next_page
 
     

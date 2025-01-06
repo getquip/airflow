@@ -1,5 +1,15 @@
 {
+    "credit_adjustments": {
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", 
+            "partitioning_field": "updated_at",
+            "clustering_fields": ["type", "credit_account_id", "id"]
+        }
+    },
     "events": {
+        "params": {
+            "object_type": "subscription"
+        },
         "bigquery_metadata": {
             "partitioning_type": "DAY",
             "partitioning_field": "created_at",
@@ -13,32 +23,28 @@
             "clustering_fields": ["name", "type", "customer_id", "id"]
         }
     },
-    "credit_adjustments": {
-        "bigquery_metadata": {
-            "partitioning_type": "DAY", 
-            "partitioning_field": "updated_at",
-            "clustering_fields": ["type", "credit_account_id", "id"]
-        }
-    },
     "customers": {
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
-            "partitioning_field": "created_at",
+            "partitioning_field": "updated_at",
             "clustering_fields": ["has_valid_payment_method", "subscription_related_charge_streak","subscriptions_active_count", "id"]
         }
     },
     "charges": {
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
-            "partitioning_field": "created_at",
+            "partitioning_field": "updated_at",
             "clustering_fields": ["status", "id"]
         },
-        "chunk_size": 1000
+        "chunk_size": 1000,
+        "params": {
+            "include": "transactions"
+        }
     },
     "discounts": {
         "bigquery_metadata": {
             "partitioning_type": "DAY", 
-            "partitioning_field": "created_at",
+            "partitioning_field": "updated_at",
             "clustering_fields": ["external_discount_source","status", "code", "id"]
         }
     },
@@ -48,5 +54,13 @@
             "partitioning_field": "updated_at",
             "clustering_fields": ["status", "sku", "customer_id", "id"]
         }
-    }
+    },
+    "orders": {
+            "bigquery_metadata": {
+                "partitioning_type": "DAY", 
+                "partitioning_field": "updated_at",
+                "clustering_fields": ["status", "scheduled_at", "updated_at", "id"]
+            },
+            "chunk_size": 1000
+        }
 }
