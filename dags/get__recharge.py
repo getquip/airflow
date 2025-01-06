@@ -61,7 +61,7 @@ with DAG(
             )
 
             upload_to_bq_task = PythonOperator(
-                task_id=f"upload_{endpoint}_data_to_bq",
+                task_id=f"upload_{ endpoint }_data_to_bq",
                 python_callable=airbud.load_data_to_bq,
                 op_kwargs={
                     "project_id": PROJECT_ID,
