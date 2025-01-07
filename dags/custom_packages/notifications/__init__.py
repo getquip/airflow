@@ -14,14 +14,9 @@ def send_slack_alert(context):
     task_name = context.get('task').task_id
     log_url = context.get('task_instance').log_url
     execution_date = context.get('execution_date')
-    project_id = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
 
     # Compose message
-    slack_msg = ""
-    if project_id == 'quip-dw-raw-dev':
-        slack_msg += "*Environment*: Development\n"
-
-    slack_msg += f"""
+    slack_msg = f"""
     :red_circle: *Data Ingestion Alert*
     ==================================================
     *DAG*: *{dag_name}*
@@ -33,7 +28,7 @@ def send_slack_alert(context):
     # Create Notification
     notifier = send_slack_notification(
         text=slack_msg,
-        channel="#alerts-data",
+        channel=Variable.get("SLACK_CHANNEL", default_var="#alerts-data-dev"),
         username="Airflow",
         slack_conn_id="slack_default"
     )
