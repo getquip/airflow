@@ -8,9 +8,7 @@ There are two Composer environments:
 - **Development**: Used for testing and development purposes.
 - **Production**: Used for production workflows and running DAGs in the live environment.
 
-GitHub Actions workflows determine where to push code based on the GitHub branches:
-- By default, all branches should be merged into the `airflow-development` branch.
-- Only admins have the permission to merge the `airflow-development` branch into `airflow-production`.
+GitHub Actions workflows only deploy DAGs to the production environment.
 
 ## Airflow DAGs
 Within the Airflow environment, all DAGs are executed from the `dags/` directory. This directory is pushed directly to the Composer GCS bucket, and the DAGs in it are scheduled and run according to the configuration in the Composer environment.
@@ -61,9 +59,9 @@ Within the Airflow environment, all DAGs are executed from the `dags/` directory
 ### Storing in Google Cloud Storage (GCS)
 We store JSON responses in GCS using the following structure:
 
-`PROJECT_NAME/airflow/FUNCTION/NAME_OF_DAG/file`
+`PROJECT_NAME/airflow/FUNCTION/NAME_OF_DAG/file_path`
 
 Example:
   - DAG named `get__recharge`
-  - Stored at: `quip-dw-raw-dev/quip_airflow/get/recharge/file`
-  - GCS path: `quip-dw-raw/quip_airflow/get/recharge/file`
+  - Stored at: `quip-dw-raw-dev/quip_airflow/get/recharge/events/file.json`
+  - GCS path: `quip-dw-raw/quip_airflow/get/recharge/events/file.json`
