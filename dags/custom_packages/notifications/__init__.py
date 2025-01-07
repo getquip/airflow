@@ -33,7 +33,7 @@ def send_slack_alert(context):
     # Create Notification
     notifier = send_slack_notification(
         text=slack_msg,
-        channel="#data-engineering-alerts",
+        channel="#alerts-data",
         username="Airflow",
         slack_conn_id="slack_default"
     )
