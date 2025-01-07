@@ -40,12 +40,14 @@ jobs:
         project_id: ${{ secrets.GCP_PROD_PROJECT_ID }} 
         credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
-    - name: Push entire repo to GCS
+    - name: Copy Dev GCS to Prod GCS
       if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
       run: |
             echo "Syncing repository to GCS production bucket"
-            gcloud storage rsync $AIRFLOW_DEV_BUCKET $AIRFLOW_PROD_BUCKET --recursive
-
+            gcloud storage rsync $AIRFLOW_DEV_BUCKET $AIRFLOW_PROD_BUCKET \
+            --recursive \
+            --delete-unmatched-destination-objects
+            
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ always() && (needs.deploy.result == 'failure' || needs.deploy.result == 'timed_out') }}
