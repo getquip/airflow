@@ -22,7 +22,7 @@ def send_slack_alert(context):
         slack_msg += "*Environment*: Development\n"
 
     slack_msg += f"""
-    :red_circle: Data Ingestion Alert
+    :red_circle: *Data Ingestion Alert*
     ==================================================
     *DAG*: *{dag_name}*
     *Task*: {task_name}
