@@ -10,6 +10,7 @@ from airflow.utils.task_group import TaskGroup
 
 # Custom package imports
 from custom_packages.cleanup import cleanup_xcom
+from custom_packages.notifications import send_slack_alert
 from custom_packages import airbud
 from clients.recharge import GetRecharge
 
@@ -22,28 +23,24 @@ GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
 API_KEY = airbud.get_secrets(PROJECT_ID, 'recharge', prefix="api__")
 recharge = GetRecharge(API_KEY['api_key'])
 
-# Define the DAG
+# Define default arguments for the DAG
 default_args = {
     "owner": "ammie",
-    "depends_on_past": False, 
     "email_on_failure": False,
     "email_on_retry": False,
     "retries": 1,
+    "catchup": False,
+    "max_active_runs": 1,
+    "on_success_callback": cleanup_xcom,
+    "on_failure_callback": [send_slack_alert],
 }
 
-# add slack bot to the DAG
-if 'dev' not in PROJECT_ID:
-    default_args['on_failure_callback'] = CallbackNotifier().on_failure_callback
-
 with DAG(
-    dag_id = "get__recharge",
-    default_args=default_args,
+    dag_id="get__recharge",
     description="A DAG to fetch Recharge data and load into GCS and BigQuery",
     schedule_interval="0 */6 * * *",  # Every 6 hours
+    default_args=default_args,
     start_date=datetime(2024, 12, 1),
-    catchup=False,
-    max_active_runs=1,
-    on_success_callback=cleanup_xcom
 ) as dag:
 
     # Define ingestion tasks
