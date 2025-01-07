@@ -42,7 +42,7 @@ jobs:
     - name: Push dags/ to GCS
       if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
       run: |
-            gcloud storage rsync dags/ $AIRFLOW_BUCKET/dags \
+            gcloud storage rsync dags/ $AIRFLOW_PROD_BUCKET/dags \
             --recursive \
             --exclude=".DS_Store" \
             --delete-unmatched-destination-objects
