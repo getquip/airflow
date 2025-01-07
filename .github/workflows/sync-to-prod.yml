@@ -46,8 +46,8 @@ jobs:
             echo "Syncing repository to GCS production bucket"
             gcloud storage rsync $AIRFLOW_DEV_BUCKET $AIRFLOW_PROD_BUCKET \
             --recursive \
-            --delete-unmatched-destination-object \
-
+            --delete-unmatched-destination-objects
+            
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ always() && (needs.deploy.result == 'failure' || needs.deploy.result == 'timed_out') }}
