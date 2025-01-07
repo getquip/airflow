@@ -12,9 +12,6 @@ on:
 env:
   AIRFLOW_VERSION: "2.10.2"  # Match the Airflow version in Composer 
   GH_TOKEN: ${{ github.token }}  # GitHub token to access the PR files
-  GCS_BUCKET_NAME: ${{ secrets.AIRFLOW_DEV_BUCKET }}
-  GCP_PROJECT_ID: ${{ secrets.GCP_DEV_PROJECT_ID }}  
-  GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
   
 jobs:
   deploy:
@@ -100,15 +97,7 @@ jobs:
           pip install apache-airflow[cncf.kubernetes]
           pip install -r requirements.txt
 
-      # 5 Authenticate with Google Cloud SDK
-      - name: Authenticate with Google Cloud SDK
-        if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
-        run: |
-          echo $GCP_CREDENTIALS_JSON > gcp_key.json
-          gcloud auth activate-service-account --key-file=gcp_key.json
-          gcloud config set project $GCP_PROJECT_ID
-
-      # 6. Validate if any new DAG scripts are valid
+      # 5. Validate if any new DAG scripts are valid
       - name: Validate new DAGs
         if: env.new_dags != ''  # Only run this step if there are new/modified DAG files
         run: |
@@ -126,7 +115,7 @@ jobs:
             echo "DAG $dag_file is valid."
           done
 
-# Step 6 Breakdown
+# Step 5 Breakdown
 # The last step in the workflow validates the new or modified DAG files.
 # The script loops through each DAG file and validates it using the `DagBag` class from the Airflow library.
 # The `DagBag` class is used to process a DAG file and check for any import errors.
