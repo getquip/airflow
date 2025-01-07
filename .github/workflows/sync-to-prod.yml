@@ -42,7 +42,7 @@ jobs:
     - name: Push dags/ to GCS
       if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
       run: |
-            gcloud storage rsync dags/ $AIRFLOW_BUCKET/dags \
+            gcloud storage rsync dags/ $AIRFLOW_PROD_BUCKET/dags \
             --recursive \
             --exclude=".DS_Store" \
             --delete-unmatched-destination-objects
@@ -59,6 +59,6 @@ jobs:
       env:
         SLACK_USERNAME: GHA
         SLACK_TITLE: Workflow ${{ needs.deploy.result }}
-        MSG_MINIMAL: actions url
+        MSG_MINIMAL: "Deployment failed. Workflow run: ${{ github.run_id }}. Check details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
 
