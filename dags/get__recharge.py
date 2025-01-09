@@ -49,7 +49,7 @@ with DAG(
 
             ingestion_task = PythonOperator(
                 task_id= f"ingest_{ endpoint }_data",
-                python_callable=airbud.ingest_data,
+                python_callable=airbud.ingest_from_api,
                 op_kwargs={
                     "project_id": PROJECT_ID,
                     "bucket_name": GCS_BUCKET,

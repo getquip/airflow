@@ -1,0 +1,86 @@
+[
+    {
+        "name": "house_bill_number",
+        "type": "STRING"
+    },
+    {
+        "name": "master_bill_number",
+        "type": "STRING"
+    },
+    {
+        "name": "created_at",
+        "type": "STRING"
+    },
+    {
+        "name": "transportation_method",
+        "type": "STRING"
+    },
+    {
+        "name": "co_load_bill_of_lading",
+        "type": "STRING"
+    },
+    {
+        "name": "container_id",
+        "type": "STRING"
+    },
+    {
+        "name": "vendor",
+        "type": "STRING"
+    },
+    {
+        "name": "origin_port_code",
+        "type": "STRING"
+    },
+    {
+        "name": "destination_port_code",
+        "type": "STRING"
+    },
+    {
+        "name": "gross_weight",
+        "type": "STRING"
+    },
+    {
+        "name": "chargeable_weight",
+        "type": "STRING"
+    },
+    {
+        "name": "units",
+        "type": "STRING"
+    },
+    {
+        "name": "cubic_meters",
+        "type": "STRING"
+    },
+    {
+        "name": "cartons",
+        "type": "STRING"
+    },
+    {
+        "name": "cargo_received_at",
+        "type": "STRING"
+    },
+    {
+        "name": "actual_time_of_departure_origin_at",
+        "type": "STRING"
+    },
+    {
+        "name": "actual_arrival_airport_wetport_at",
+        "type": "STRING"
+    },
+    {
+        "name": "custom_release_at",
+        "type": "STRING"
+    },
+    {
+        "name": "delivery_address",
+        "type": "STRING"
+    },
+    {
+        "name": "delivered_at",
+        "type": "STRING"
+    },
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	}
+]

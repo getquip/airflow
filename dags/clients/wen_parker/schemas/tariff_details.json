@@ -1,0 +1,26 @@
+[
+    {
+        "name": "house_bill_number",
+        "type": "STRING"
+    },
+    {
+        "name": "line_item_description",
+        "type": "STRING"
+    },
+    {
+        "name": "tariff_number",
+        "type": "STRING"
+    },
+    {
+        "name": "tariff_duty",
+        "type": "STRING"
+    },
+    {
+        "name": "fees",
+        "type": "STRING"
+    },
+    {
+        "name": "duty_rate_percent",
+        "type": "STRING"
+    }
+]
