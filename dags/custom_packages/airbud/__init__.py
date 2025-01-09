@@ -7,7 +7,7 @@ import shutil
 # Import specific functions or classes you want to expose
 from custom_packages.airbud.get_secrets import get_secrets
 from custom_packages.airbud.get_data import *
-from custom_packages.airbud.dag_operators.ingest_data import *
+from custom_packages.airbud.dag_operators.ingest_from_api import *
 from custom_packages.airbud.dag_operators.load_data_to_bq import *
 
 

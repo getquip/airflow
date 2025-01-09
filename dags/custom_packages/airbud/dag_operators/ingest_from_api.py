@@ -15,7 +15,7 @@ from custom_packages.airbud import gcs
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
-def ingest_data(
+def ingest_from_api(
     project_id: str,  # GCP Project
     bucket_name: str,  # GCS Bucket
     client: object,  # Client object
