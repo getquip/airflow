@@ -4,3 +4,4 @@ google-cloud-bigquery==3.13.0  # For BigQuery access and operations
 pandas==2.1.1  # Core library for data manipulation and analysis
 numpy==1.24.3  # NumPy for array operations (required by Pandas)
 apache-airflow-providers-slack==9.0.0  # For sending messages to Slack
+apache-airflow-providers-sftp==5.0.0  # For SFTP operations 
