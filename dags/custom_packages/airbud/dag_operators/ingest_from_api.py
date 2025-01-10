@@ -6,6 +6,7 @@ import os
 # Third-party imports
 from airflow.models import TaskInstance
 from airflow.models.dagrun import DagRun
+from google.cloud import storage
 
 # Local package imports
 from custom_packages.airbud import get_data
@@ -27,6 +28,9 @@ def ingest_from_api(
     """
     Ingest data from a Recharge API endpoint.
     """
+    # Initialize GCS client
+    gcs_client = storage.Client(project_id)
+    
     # API Endpoint
     url = client.base_url + endpoint
     headers = client.headers or endpoint_kwargs.get("headers", None)
@@ -63,7 +67,7 @@ def ingest_from_api(
     if len(records) > 0:
         log.info(f"Uploading {len(records)} records to GCS...")
         gcs.upload_json_to_gcs(
-            project_id,
+            gcs_client,
             bucket_name,
             client.dataset,
             endpoint,
