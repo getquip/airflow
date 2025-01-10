@@ -1,0 +1,31 @@
+{
+	"invoice_line_items": {
+		"paths": ["archive"],
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["invoice_number", "invoice_date", "shipment_type", "charge_code"]
+		}	
+	},
+	"shipment_details": {
+		"ignore": ["Test.txt"],
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["house_bill_number", "master_bill_number", "created_at", "transportation_method"]
+		}	
+	},
+	"shipment_item_details": {
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["house_bill_number", "po_number", "sku_number"]
+		}	
+	},
+	"tariff_details": {
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at"
+		}	
+	}
+}
