@@ -29,7 +29,7 @@ def generate_blob_name(
     return filename
 
 def upload_json_to_gcs(
-        project_id: str, 
+        client: object, # GCS client object
         bucket_name: str, 
         dataset_name: str,
         endpoint: str,
@@ -39,9 +39,6 @@ def upload_json_to_gcs(
     """
     Upload JSON data to Google Cloud Storage (GCS).
     """
-    # Initialize the GCS client
-    client = storage.Client(project_id)
-
     # Get the GCS bucket object
     bucket = client.get_bucket(bucket_name)
 
@@ -61,7 +58,7 @@ def upload_json_to_gcs(
     log.info(f"Uploaded data to GCS location...{ bucket_name }")
 
 def get_records_from_file(
-        project_id: str, 
+        client: object, # GCS client object
         bucket_name: str, 
         dataset_name: str,
         endpoint: str,
@@ -72,9 +69,6 @@ def get_records_from_file(
     """
     # Generate the destination file name for the GCS blob
     filename = generate_blob_name(dataset_name, endpoint, **kwargs)
-
-    # Initialize the GCS client
-    client = storage.Client(project_id)
 
     # Get the GCS bucket object
     bucket = client.get_bucket(bucket_name)
@@ -91,3 +85,33 @@ def get_records_from_file(
     log.info(f"Downloaded data from GCS location...{filename}")
     return records
 
+def list_all_files(
+    client: object, # GCS client object
+    bucket_name: str, 
+    path: str,
+    **kwargs
+    ) -> List[str]:
+    # Get the GCS bucket object
+    bucket = client.get_bucket(bucket_name)
+
+    # List all files in the GCS bucket under the given path
+    blobs = bucket.list_blobs(prefix=path, **kwargs)
+    files = sorted([blob.name for blob in blobs])
+
+    return files
+
+def upload_csv_to_gcs(
+    client: object, # GCS client object
+    bucket_name: str,
+    path: str,
+    filename: str,
+    **kwargs
+    ) -> None:
+    # Initialize the GCS path
+    bucket = client.get_bucket(bucket_name)
+    gcs_file_path = f"{path}/{filename}"
+
+    # Upload the file to GCS
+    blob = bucket.blob(gcs_file_path)
+    blob.upload_from_filename(filename)
+    log.info(f"Uploaded: {filename} to gs://{bucket_name}/{gcs_file_path}")

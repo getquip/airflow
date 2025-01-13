@@ -100,10 +100,10 @@ class GetRecharge(GetClient):
             else:
                 next_page = df["updated_at"].max()
         else:
-            if last_ts.date() == pd.Timestamp.utcnow().normalize().date():
-                next_page = None
+            if last_ts:
+                next_page = str(stop_at) 
             else:
-                next_page = str(stop_at)
+                next_page = '2024-06-20'
         return records, next_page
 
     

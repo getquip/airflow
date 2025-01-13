@@ -1,6 +1,5 @@
 {
 	"invoice_line_items": {
-		"paths": ["archive"],
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
 			"partitioning_field": "source_synced_at",
