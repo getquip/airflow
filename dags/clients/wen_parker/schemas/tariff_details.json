@@ -16,11 +16,23 @@
         "type": "STRING"
     },
     {
+        "name": "duty_rate",
+        "type": "STRING"
+    },
+    {
         "name": "fees",
         "type": "STRING"
     },
     {
         "name": "duty_rate_percent",
         "type": "STRING"
-    }
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    },
+	{
+		"name": "source_file_name",
+		"type": "STRING"
+	}
 ]

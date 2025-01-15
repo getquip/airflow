@@ -48,11 +48,11 @@ def load_data_to_bq_from_api(
         bq_client = bigquery.Client(project=project_id)
         
         # Ensure the destination table exists
-        table_ref = bq_client.dataset(client.dataset).table(endpoint)
+        table_ref = post_to_bq.get_destination(bq_client, client, endpoint, endpoint_kwargs)
 
         # Insert rows into BigQuery in chunks
         chunk_size = endpoint_kwargs.get("chunk_size", 8000)
-        insert_records(bq_client, table_ref, records, max_retries=3, chunk_size=chunk_size)
+        post_to_bq.insert_records(bq_client, table_ref, records, max_retries=3, chunk_size=chunk_size)
         log.info(f"Successfully inserted { len(records) } rows into { endpoint }.")
     else:
         log.info(f"No records found for { endpoint }. Skipping load.")

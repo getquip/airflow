@@ -25,7 +25,7 @@ class GetWenParker(GetClient):
         self.dataset = "wen_parker"
 
         # Define the parent path
-        self.parent_path = "Quip/wen_parker/"
+        self.parent_path = "Quip/wen_parker"
 
         # Load endpoints configuration
         try:

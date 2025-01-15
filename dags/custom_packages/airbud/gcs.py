@@ -114,4 +114,4 @@ def upload_csv_to_gcs(
     # Upload the file to GCS
     blob = bucket.blob(gcs_file_path)
     blob.upload_from_filename(filename)
-    log.info(f"Uploaded: {filename} to gs://{bucket_name}/{gcs_file_path}")
+    log.info(f"Uploaded to GCS: {filename} to gs://{bucket_name}/{gcs_file_path}")

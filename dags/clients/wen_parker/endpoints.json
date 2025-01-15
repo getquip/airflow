@@ -1,5 +1,6 @@
 {
 	"invoice_line_items": {
+		"ignore": ["archive/do-not-load"],
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
 			"partitioning_field": "source_synced_at",
@@ -7,7 +8,7 @@
 		}	
 	},
 	"shipment_details": {
-		"ignore": ["Test.txt"],
+		"ignore": ["Test.txt", "archive/do-not-load"],
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
 			"partitioning_field": "source_synced_at",
@@ -15,6 +16,7 @@
 		}	
 	},
 	"shipment_item_details": {
+		"ignore": ["archive/do-not-load"],
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
 			"partitioning_field": "source_synced_at",
@@ -22,6 +24,7 @@
 		}	
 	},
 	"tariff_details": {
+		"ignore": ["archive/do-not-load"],
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
 			"partitioning_field": "source_synced_at"

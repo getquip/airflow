@@ -44,16 +44,16 @@ with DAG(
 
 	# Define ingestion tasks
 	for endpoint, endpoint_kwargs in CLIENT.endpoints.items():
-			ingestion_task = PythonOperator(
-				task_id=f"ingest_{endpoint}_data",
-				python_callable=airbud.ingest_from_sftp,
-				op_kwargs={
-					"project_id": PROJECT_ID,
-					"bucket_name": GCS_BUCKET,
-					"sftp_conn_id": SFTP_CONN_ID,
-					"client": CLIENT,
-					"endpoint": endpoint,
-					"endpoint_kwargs": endpoint_kwargs,
-				},
-				dag=dag
-			)
+		ingestion_task = PythonOperator(
+			task_id=f"ingest_{endpoint}_data",
+			python_callable=airbud.ingest_from_sftp,
+			op_kwargs={
+				"project_id": PROJECT_ID,
+				"bucket_name": GCS_BUCKET,
+				"sftp_conn_id": SFTP_CONN_ID,
+				"client": CLIENT,
+				"endpoint": endpoint,
+				"endpoint_kwargs": endpoint_kwargs,
+			},
+			dag=dag,
+		)

@@ -82,5 +82,9 @@
 	{
 		"name": "source_synced_at",
 		"type": "TIMESTAMP"
+	},
+	{
+		"name": "source_file_name",
+		"type": "STRING"
 	}
 ]

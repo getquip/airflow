@@ -26,27 +26,23 @@ def create_dataset_if_not_exists(
         # Dataset doesn't exist, so create it
         dataset = bigquery.Dataset(dataset_ref)
         client.create_dataset(dataset)  # API request to create the dataset
-        log.info(f"Dataset '{dataset_name}' created successfully.")
+        log.info(f"BigQuery Dataset '{dataset_name}' created successfully.")
 
 def create_table_if_not_exists(
         client: object, # BigQuery client object
-        dataset_name: str,
         endpoint_kwargs: dict,
-        endpoint: str,
-        client_object: object, # DAG client object
+        schema: dict, # Schema for the table
         table_ref: object # BigQuery table reference
 ) -> None:
     """Create a BigQuery table if it does not exist."""
     try:
         # Try to fetch the table, if it exists, this will return the table
         client.get_table(table_ref)
-        log.info(f"Table '{ endpoint }' already exists in dataset '{ dataset_name }'.")
+        log.info(f"Table '{table_ref}' already exists.")
     
     except Exception as e:
-        log.info(f"Table '{endpoint}' does not exist'. Creating it now...")
+        log.info(f"Table '{table_ref}' does not exist'. Creating it now...")
         bigquery_metadata = endpoint_kwargs.get("bigquery_metadata", {})
-        # Get the destination schema from the JSON file
-        schema = client_object.schemas[endpoint]
         
         # Create table object
         table = bigquery.Table(table_ref, schema=schema)
@@ -69,7 +65,7 @@ def create_table_if_not_exists(
         # Create table in BQ
         try:
             client.create_table(table)
-            log.info(f"Table '{endpoint}' created successfully in dataset '{dataset_name}'.")   
+            log.info(f"BigQuery Table created successfully.")   
         except Exception as e:
             log.error(f"An error occurred while trying to create the BigQuery table: {e}")
 
@@ -81,7 +77,7 @@ def insert_records(
         chunk_size: int = 1000,  # Number of records per chunk
     ) -> None:
     total_records = len(records)
-    log.info(f"Starting data insertion for {total_records} records in chunks of {chunk_size}.")
+    log.info(f"Starting data insertion for {total_records} records in chunks of {total_records if total_records < chunk_size else chunk_size}.")
 
     for i in range(0, total_records, chunk_size):
         chunk = records[i:i + chunk_size]
@@ -99,7 +95,7 @@ def insert_records(
                 if attempt == max_retries - 1:
                     log.error(f"Max retries reached for chunk {i}-{i + len(chunk)}. Failing.")
                     raise RuntimeError(f"Unable to insert data after {max_retries} retries for chunk {i}-{i + len(chunk)}.")
-                time.sleep(retry_delay)
+                time.sleep(5)
 
     log.info(f"All {total_records} records inserted successfully into the table.")
 
@@ -109,13 +105,16 @@ def get_destination(
         endpoint: str, 
         endpoint_kwargs: dict 
     ) -> object:
+    # Get the table reference
     table_ref = bq_client.dataset(client.dataset).table(endpoint)
+
+    # Check if the table exists
     try:
         bq_client.get_table(table_ref)
-    except Exception as e:
-        # Dataset and Table creation logic
+    except Exception as e: # Create the dataset/table if it doesn't exist
+        schema = client.schemas[endpoint]
         create_dataset_if_not_exists(bq_client, client.dataset)
-        create_table_if_not_exists(bq_client, client.dataset, endpoint_kwargs, endpoint, client)
+        create_table_if_not_exists(bq_client, endpoint_kwargs, schema, table_ref)
         
         # Retry logic for table availability
         max_retries = 5
