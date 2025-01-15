@@ -1,0 +1,50 @@
+[	
+	{
+		"name": "invoice_number",
+		"type": "STRING"
+	},
+	{
+		"name": "invoice_date",
+		"type": "STRING"
+	},
+	{
+		"name": "payer_code",
+		"type": "STRING"
+	},
+	{
+		"name": "payer_name",
+		"type": "STRING"
+	},
+	{
+		"name": "shipment_type",
+		"type": "STRING"
+	},
+	{
+		"name": "house_bill_number",
+		"type": "STRING"
+	},
+	{
+		"name": "charge_code",
+		"type": "STRING"
+	},
+	{
+		"name": "charge_name",
+		"type": "STRING"
+	},
+	{
+		"name": "invoice_currency",
+		"type": "STRING"
+	},
+	{
+		"name": "invoice_amount",
+		"type": "STRING"
+	},
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	},
+	{
+		"name": "source_file_name",
+		"type": "STRING"
+	}
+]

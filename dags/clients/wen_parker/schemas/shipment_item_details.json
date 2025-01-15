@@ -1,0 +1,30 @@
+[
+    {
+        "name": "house_bill_number",
+        "type": "STRING"
+    },
+    {
+        "name": "po_number",
+        "type": "STRING"
+    },
+    {
+        "name": "sku_number",
+        "type": "STRING"
+    },
+    {
+        "name": "cartons",
+        "type": "STRING"
+    },
+    {
+        "name": "quantity",
+        "type": "STRING"
+    },
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	},
+	{
+		"name": "source_file_name",
+		"type": "STRING"
+	}
+]

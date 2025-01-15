@@ -21,7 +21,7 @@ GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
 
 # Initialize the GetRecharge class
 API_KEY = airbud.get_secrets(PROJECT_ID, 'recharge', prefix="api__")
-recharge = GetRecharge(API_KEY['api_key'])
+RECHARGE_CLIENT = GetRecharge(API_KEY['api_key'])
 
 # Define default arguments for the DAG
 default_args = {
@@ -44,16 +44,16 @@ with DAG(
 ) as dag:
 
     # Define ingestion tasks
-    for endpoint, endpoint_kwargs in recharge.endpoints.items():
+    for endpoint, endpoint_kwargs in RECHARGE_CLIENT.endpoints.items():
         with TaskGroup(group_id=f"get__{endpoint}") as endpoint_group:
 
             ingestion_task = PythonOperator(
                 task_id= f"ingest_{ endpoint }_data",
-                python_callable=airbud.ingest_data,
+                python_callable=airbud.ingest_from_api,
                 op_kwargs={
                     "project_id": PROJECT_ID,
                     "bucket_name": GCS_BUCKET,
-                    "client": recharge,
+                    "client": RECHARGE_CLIENT,
                     "endpoint": endpoint,  
                     "endpoint_kwargs": endpoint_kwargs,
                     "paginate": True
@@ -63,11 +63,11 @@ with DAG(
 
             upload_to_bq_task = PythonOperator(
                 task_id=f"upload_{ endpoint }_data_to_bq",
-                python_callable=airbud.load_data_to_bq,
+                python_callable=airbud.load_data_to_bq_from_api,
                 op_kwargs={
                     "project_id": PROJECT_ID,
                     "bucket_name": GCS_BUCKET,
-                    "client": recharge,
+                    "client": RECHARGE_CLIENT,
                     "endpoint": endpoint,
                     "endpoint_kwargs": endpoint_kwargs,
                     "paginate": True

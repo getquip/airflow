@@ -6,6 +6,7 @@ import os
 # Third-party imports
 from airflow.models import TaskInstance
 from airflow.models.dagrun import DagRun
+from google.cloud import storage
 
 # Local package imports
 from custom_packages.airbud import get_data
@@ -15,7 +16,7 @@ from custom_packages.airbud import gcs
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
-def ingest_data(
+def ingest_from_api(
     project_id: str,  # GCP Project
     bucket_name: str,  # GCS Bucket
     client: object,  # Client object
@@ -23,11 +24,12 @@ def ingest_data(
     endpoint_kwargs: dict,  # Endpoint-specific arguments
     paginate=False,  # Initialize pagination flag
     **kwargs
-):
-    """
-    Ingest data from a Recharge API endpoint.
-    """
-    # API Endpoint
+) -> None:
+
+    # Initialize GCS client
+    gcs_client = storage.Client(project_id)
+    
+    # API Endpoint parameters
     url = client.base_url + endpoint
     headers = client.headers or endpoint_kwargs.get("headers", None)
     jsonl_path = endpoint_kwargs.get("jsonl_path", None)
@@ -40,7 +42,7 @@ def ingest_data(
     # Get data
     if paginate:
         log.info("Paginating data...")
-        # Parse pagination parameters
+        # Parse pagination parameters for use in client specific pagination method
         parameters = params or data or json_data or {}
         records, next_page = client.paginate_responses(endpoint, url, headers, parameters, **kwargs)
 
@@ -50,7 +52,7 @@ def ingest_data(
             key='next_page',
             value=next_page
         )
-        log.info(f"Stored next page for { endpoint } in XComs: { next_page }")
+        log.info(f"Stored next page for {endpoint} in XComs: {next_page}")
     else:
         response = get_data.get_data(url, headers, params, json_data, data)
         response_json = response.json()
@@ -63,7 +65,7 @@ def ingest_data(
     if len(records) > 0:
         log.info(f"Uploading {len(records)} records to GCS...")
         gcs.upload_json_to_gcs(
-            project_id,
+            gcs_client,
             bucket_name,
             client.dataset,
             endpoint,
