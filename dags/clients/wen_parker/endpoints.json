@@ -27,7 +27,8 @@
 		"ignore": ["archive/do-not-load"],
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
-			"partitioning_field": "source_synced_at"
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["house_bill_number", "line_item_description"]
 		}	
 	}
 }
