@@ -51,22 +51,36 @@ def ingest_from_sftp(
             # Clean the column names and convert to JSON for BQ insertion
             records = sftp.clean_column_names(local_file, **kwargs)
             
-            # Insert the records to BigQuery
             try:
+                # Get or create the BigQuery table
                 table_ref = post_to_bq.get_destination(bq_client, client, endpoint, endpoint_kwargs)
+
+                # Insert the records to BigQuery
                 post_to_bq.insert_records(bq_client, table_ref, records)
+                
                 # Upload the files to GCS
                 gcs.upload_csv_to_gcs(gcs_client, bucket_name, gcs_path, local_file)
+
+                # Move the files to the processed folder in SFTP
                 sftp.move_file_on_sftp(sftp_conn_id, source_file, local_file, sftp_path)
+                
                 log.info(f"Successfully uploaded {local_file} to BigQuery and GCS.")
+
             except Exception as e:
                 # If failed to insert to BigQuery, store the file in error folder of the endpoint
                 log.warning(f"Error uploading {local_file} to Quip Environment: {e}")
+
+                # Create error folder in GCS
                 dag_run: DagRun = kwargs.get('dag_run')
                 dag_run_date = dag_run.execution_date
                 error_file_path = f"{gcs_path}/error/{dag_run_date}"
+
+                # Upload the file to GCS
                 gcs.upload_csv_to_gcs(gcs_client, bucket_name, error_file_path, local_file)
+
+                # Create list of bad files to raise exception
                 bad_files.append(source_file)
+                
         if len(bad_files) > 0:
             raise Exception(f"Failed to process {len(bad_files)} files: {bad_files}")
     else:

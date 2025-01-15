@@ -24,14 +24,12 @@ def ingest_from_api(
     endpoint_kwargs: dict,  # Endpoint-specific arguments
     paginate=False,  # Initialize pagination flag
     **kwargs
-):
-    """
-    Ingest data from a Recharge API endpoint.
-    """
+) -> None:
+
     # Initialize GCS client
     gcs_client = storage.Client(project_id)
     
-    # API Endpoint
+    # API Endpoint parameters
     url = client.base_url + endpoint
     headers = client.headers or endpoint_kwargs.get("headers", None)
     jsonl_path = endpoint_kwargs.get("jsonl_path", None)
@@ -44,7 +42,7 @@ def ingest_from_api(
     # Get data
     if paginate:
         log.info("Paginating data...")
-        # Parse pagination parameters
+        # Parse pagination parameters for use in client specific pagination method
         parameters = params or data or json_data or {}
         records, next_page = client.paginate_responses(endpoint, url, headers, parameters, **kwargs)
 
@@ -54,7 +52,7 @@ def ingest_from_api(
             key='next_page',
             value=next_page
         )
-        log.info(f"Stored next page for { endpoint } in XComs: { next_page }")
+        log.info(f"Stored next page for {endpoint} in XComs: {next_page}")
     else:
         response = get_data.get_data(url, headers, params, json_data, data)
         response_json = response.json()
