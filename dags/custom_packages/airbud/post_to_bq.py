@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 def create_dataset_if_not_exists(
         client: object, # BigQuery client object
         dataset_name: str
-) -> None:
+    ) -> None:
     """Create a BigQuery dataset if it does not exist."""
     dataset_ref = client.dataset(dataset_name)
     
@@ -33,7 +33,7 @@ def create_table_if_not_exists(
         endpoint_kwargs: dict,
         schema: dict, # Schema for the table
         table_ref: object # BigQuery table reference
-) -> None:
+    ) -> None:
     """Create a BigQuery table if it does not exist."""
     try:
         # Try to fetch the table, if it exists, this will return the table
@@ -76,6 +76,7 @@ def insert_records(
         max_retries: int = 3,  # Maximum number of retries
         chunk_size: int = 1000,  # Number of records per chunk
     ) -> None:
+    """Insert records into a BigQuery table in chunks."""
     total_records = len(records)
     log.info(f"Starting data insertion for {total_records} records in chunks of {total_records if total_records < chunk_size else chunk_size}.")
 
@@ -105,6 +106,7 @@ def get_destination(
         endpoint: str, 
         endpoint_kwargs: dict 
     ) -> object:
+    """Get the BigQuery table reference for the endpoint."""
     # Get the table reference
     table_ref = bq_client.dataset(client.dataset).table(endpoint)
 

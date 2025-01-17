@@ -41,9 +41,10 @@ class GetRecharge(GetClient):
         params = parameters
         params["limit"] = 250
 
-        # Get last bookmark
+        # Get last bookmark, None if no bookmark
         last_ts = get_next_page_from_last_dag_run(f"recharge__{endpoint}")
-            # Only fetch the next day of data
+        
+        # Only fetch the next day of data
         if last_ts:
             last_ts = pd.to_datetime(last_ts)
             stop_at = last_ts + pd.Timedelta(days=1)
@@ -51,10 +52,10 @@ class GetRecharge(GetClient):
                 params["created_at_min"] = last_ts
             else:
                 params["updated_at_min"] = last_ts
-            # If the last updated_at is today, do not pass the updated_at_max parameter
+            # If last_ts is today, do not pass the updated_at_max parameter
             if last_ts.date() == pd.Timestamp.utcnow().normalize().date() or stop_at.date() == pd.Timestamp.utcnow().normalize().date():
                 pass
-            # If the stop_at date is today, do not pass the updated_at_max parameter
+            # If stop_at date is today, do not pass the updated_at_max parameter
             elif stop_at.date() == pd.Timestamp.utcnow().normalize().date():
                 pass
             else:
@@ -62,9 +63,12 @@ class GetRecharge(GetClient):
                     params["created_at_max"] = stop_at
                 else:
                     params["updated_at_max"] = stop_at
-                log.info(f"Fetching data from {last_ts} to {stop_at}")
         else:
-            params["updated_at_max"] = '2024-06-20'
+            last_ts = '2024-06-20'
+            stop_at = '2024-06-21'
+            params["updated_at_min"] = last_ts
+            params["updated_at_max"] = stop_at
+        log.info(f"Fetching data from {last_ts} to {stop_at}")
 
         # Paginate through the API endpoint and create a list of records
         records = []
@@ -96,14 +100,11 @@ class GetRecharge(GetClient):
         if len(records) > 0:
             df = pd.DataFrame(records)
             if endpoint == "events":
-                next_page = df["created_at"].max()
+                next_page = max(df["created_at"].max(), stop_at)
             else:
-                next_page = df["updated_at"].max()
+                next_page = max(df["updated_at"].max(), stop_at)
         else:
-            if last_ts:
-                next_page = str(stop_at) 
-            else:
-                next_page = '2024-06-20'
+            next_page = str(stop_at)
         return records, next_page
 
     

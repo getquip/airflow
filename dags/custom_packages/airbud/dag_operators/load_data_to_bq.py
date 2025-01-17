@@ -24,7 +24,7 @@ def load_data_to_bq_from_api(
         endpoint_kwargs: dict,  # Metadata for BigQuery table creation
         paginate=False,  # Initialize pagination flag
         **kwargs  # Additional keyword arguments
-) -> None:
+    ) -> str:
     """
     Upload JSON data to BigQuery.
     """
@@ -69,4 +69,5 @@ def load_data_to_bq_from_api(
             log.info(f"Stored next page for { endpoint }.")
         else:
             log.info(f"No next page found for { endpoint }.")
+    return "success"
 

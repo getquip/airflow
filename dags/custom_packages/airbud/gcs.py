@@ -18,9 +18,7 @@ def generate_blob_name(
         endpoint: str,
         **kwargs
     ) -> str:
-    """
-    Generate the destination blob name for a JSON file in GCS.
-    """
+    """Generate the destination blob name for a JSON file in GCS."""
     dag_run: DagRun = kwargs.get('dag_run')
     file_path = f"get/{dataset_name}/{endpoint}"
     dag_run_date = dag_run.execution_date
@@ -36,9 +34,7 @@ def upload_json_to_gcs(
         records: List[Dict],
         **kwargs
     ) -> None:
-    """
-    Upload JSON data to Google Cloud Storage (GCS).
-    """
+    """Upload JSON data to Google Cloud Storage (GCS)."""
     # Get the GCS bucket object
     bucket = client.get_bucket(bucket_name)
 
@@ -64,9 +60,7 @@ def get_records_from_file(
         endpoint: str,
         **kwargs
     ) -> List[Dict]:
-    """
-    Get JSON data from Google Cloud Storage (GCS).
-    """
+    """Get JSON data from Google Cloud Storage (GCS)."""
     # Generate the destination file name for the GCS blob
     filename = generate_blob_name(dataset_name, endpoint, **kwargs)
 
@@ -91,6 +85,7 @@ def list_all_files(
     path: str,
     **kwargs
     ) -> List[str]:
+    """List all files in a Google Cloud Storage (GCS) bucket."""
     # Get the GCS bucket object
     bucket = client.get_bucket(bucket_name)
 
@@ -107,6 +102,7 @@ def upload_csv_to_gcs(
     filename: str,
     **kwargs
     ) -> None:
+    """Upload a CSV file to Google Cloud Storage (GCS)."""
     # Initialize the GCS path
     bucket = client.get_bucket(bucket_name)
     gcs_file_path = f"{path}/{filename}"

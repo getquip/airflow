@@ -38,7 +38,7 @@ with DAG(
     dag_id="get__wen_parker",
     default_args=default_args,
     description="A DAG to sync files from Wen Parker's SFTP server",
-    schedule_interval="0 */6 * * *",  # Every 6 hours
+    schedule_interval="0 12 * * *", # Daily @ 7:00 AM EST
     start_date=datetime(2025, 1, 1)
 ) as dag:
 

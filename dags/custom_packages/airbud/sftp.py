@@ -19,6 +19,7 @@ def clean_column_names(
     csv_file: str, # Path to the CSV file
     **kwargs
     ) -> List[Dict]: # Returns csv as json records
+    """Clean column names and convert CSV to JSON records."""
     
     # Read the CSV file into a DataFrame
     df = pd.read_csv(csv_file)
@@ -58,7 +59,8 @@ def list_sftp_files(
     sftp_conn_id: str,  # SFTP connection ID
     remote_path: str,  # Remote directory path
     endpoint_kwargs: dict,  # Get files to ignore
-) -> List[str]:  # Returns list of file paths
+    ) -> List[str]:  # Returns list of file paths
+    """List unprocessed files in a remote SFTP directory."""
     # Get files to ignore
     ignore_files = endpoint_kwargs.get("ignore", [])
 
@@ -105,7 +107,8 @@ def list_sftp_files(
 def download_sftp_files(
     sftp_conn_id: str, # SFTP connection ID
     files: List[str] # List of file paths
-) -> None: # Returns list of downloaded file names (without original path)
+    ) -> None: # Returns list of downloaded file names (without original path)
+    """Download files from a remote SFTP server."""
 
     # Connect to SFTP server
     sftp_hook = SFTPHook(sftp_conn_id)
@@ -128,7 +131,8 @@ def move_file_on_sftp(
     file_path: str,  # Path to the file
     file_name: str,  # Name of the file
     sftp_path: str # Root path of the endpoint folder
-) -> None:
+    ) -> None:
+    """Move a file from the source path to the 'processed' directory on SFTP."""
     max_retries = 3  # Number of retry attempts
     retry_delay = 5  # Delay (in seconds) between retries
     # Connect to SFTP server

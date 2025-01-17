@@ -10,7 +10,7 @@ def get_secrets(
         dataset_name: str, # Used to construct the secret name
         prefix: str, # Used to construct the secret name
         version_id="latest"
-) -> str:
+    ) -> str: # The secret payload
     """
     Access a secret from Google Cloud Secret Manager.
     """

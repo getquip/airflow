@@ -24,7 +24,7 @@ def ingest_from_sftp(
     client: object,
     endpoint_kwargs: dict,
     **kwargs
-) -> None:
+    ) -> str:
     # Initialize paths
     sftp_path = f"{client.parent_path}/{endpoint}"
     gcs_path = f"get/{client.dataset}/{endpoint}"
@@ -64,7 +64,7 @@ def ingest_from_sftp(
                 # Move the files to the processed folder in SFTP
                 sftp.move_file_on_sftp(sftp_conn_id, source_file, local_file, sftp_path)
                 
-                log.info(f"Successfully uploaded {local_file} to BigQuery and GCS.")
+                return(f"Successfully uploaded {local_file} to BigQuery and GCS.")
 
             except Exception as e:
                 # If failed to insert to BigQuery, store the file in error folder of the endpoint
@@ -84,4 +84,4 @@ def ingest_from_sftp(
         if len(bad_files) > 0:
             raise Exception(f"Failed to process {len(bad_files)} files: {bad_files}")
     else:
-        log.info("No new files to process.")
+        return("No new files to process.")

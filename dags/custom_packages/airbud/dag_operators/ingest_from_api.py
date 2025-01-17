@@ -24,7 +24,7 @@ def ingest_from_api(
     endpoint_kwargs: dict,  # Endpoint-specific arguments
     paginate=False,  # Initialize pagination flag
     **kwargs
-) -> None:
+    ) -> str:
 
     # Initialize GCS client
     gcs_client = storage.Client(project_id)
@@ -72,5 +72,6 @@ def ingest_from_api(
             records,
             **kwargs 
         )
+        return "success"
     else:
-        log.info(f"No records to upload for {endpoint}.")
+        return (f"No records to upload for {endpoint}.")
