@@ -13,19 +13,20 @@ from custom_packages.airbud.api import *
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
-class GetWenParker(GetClient):
+class GetCeva(GetClient):
     def __init__(self):
         """
-        Initializes the GetWenParker instance by setting up dataset, endpoints,
-        schemas, and parent path.
+        Initializes the GetCeva class.
+
+		Ceva data is sent to S3.
         """
         super().__init__()  # Initialize the parent class
 
         # Define dataset name
-        self.dataset = "wen_parker"
+        self.dataset = "ceva"
 
         # Define the parent path
-        self.parent_path = "Quip/wen_parker"
+        self.bucket = "c5aa903e-2d4b-4853-b78c-af44763ec434"
 
         # Load endpoints configuration
         try:

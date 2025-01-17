@@ -1,9 +1,12 @@
 
-from google.cloud import bigquery
+# Import Standard Libraries
 from typing import List, Dict
 import json
 import time
 import logging
+
+# Import Third Party Libraries
+from google.cloud import bigquery
 
 # Initialize logger
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

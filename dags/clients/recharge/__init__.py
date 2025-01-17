@@ -7,7 +7,7 @@ import logging
 
 # Local package imports
 from custom_packages.airbud import GetClient
-from custom_packages.airbud.get_data import *
+from custom_packages.airbud.api import *
 
 # Initialize logger
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

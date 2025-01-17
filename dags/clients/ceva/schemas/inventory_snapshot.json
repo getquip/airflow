@@ -1,0 +1,58 @@
+[
+	{
+		"name": "snapshot_date_time",
+		"type": "STRING"
+	},
+	{
+		"name": "snapshot_date",
+		"type": "STRING"
+	},
+	{
+		"name": "sku_id",
+		"type": "STRING"
+	},
+	{
+		"name": "description",
+		"type": "STRING"
+	},
+	{
+		"name": "putaway_qty",
+		"type": "STRING"
+	},
+	{
+		"name": "quarantine",
+		"type": "INTEGER"
+	},
+	{
+		"name": "open_order_qty",
+		"type": "STRING"
+	},
+	{
+		"name": "expired",
+		"type": "STRING"
+	},
+	{
+		"name": "damage",
+		"type": "STRING"
+	},
+	{
+		"name": "total_on_hand",
+		"type": "STRING"
+	},
+	{
+		"name": "order_delta",
+		"type": "STRING"
+	},
+	{
+		"name": "kitting_qty",
+		"type": "STRING"
+	},
+	{
+		"name": "source_file_name",
+		"type": "STRING"
+	},
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	}
+]
