@@ -28,8 +28,6 @@ default_args = {
     "email_on_retry": False,
     "retries": 1,
     "max_active_runs": 1,
-    "on_success_callback": cleanup_xcom,
-    "on_failure_callback": [send_slack_alert],
 }
 
 with DAG(
@@ -39,6 +37,8 @@ with DAG(
     default_args=default_args,
     start_date=datetime(2024, 12, 1),
     catchup=False,
+    on_success_callback=cleanup_xcom,
+    on_failure_callback=[send_slack_alert],
 ) as dag:
 
     for endpoint, endpoint_kwargs in CLIENT.endpoints.items():

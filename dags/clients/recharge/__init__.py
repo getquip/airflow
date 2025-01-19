@@ -8,7 +8,6 @@ from typing import List, Dict
 # Third-party package imports
 from airflow.models import TaskInstance
 from google.cloud import storage, bigquery
-from airflow.exceptions import AirflowSkipException
 
 # Local package imports
 from custom_packages import airbud
@@ -158,7 +157,7 @@ class GetRecharge(airbud.GetClient):
         if return_value == "success":
             try: # Get records from file or API
                 filename = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
-                records = airbud.get_records_from_file(self.gcs_bucket, endpoint, filename)
+                records = airbud.get_records_from_file(self.gcs_bucket, filename)
                 log.info(f"Successfully loaded {len(records)} records from GCS.")
             except Exception as e:
                 raise Exception(f"Failed to get records from file or it doesn't exist: { e }")
@@ -180,5 +179,5 @@ class GetRecharge(airbud.GetClient):
             airbud.store_next_page_across_dags(self.dataset, endpoint, next_page)
 
         else:
-            raise AirflowSkipException("Skipped because no new records were found.")
+            log.info("Do Nothing.")
 

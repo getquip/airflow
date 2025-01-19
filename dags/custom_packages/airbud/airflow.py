@@ -3,6 +3,7 @@ import logging
 
 # Third-party imports
 from airflow.models import Variable
+from airflow.exceptions import AirflowSkipException
 
 # Initialize logger
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")

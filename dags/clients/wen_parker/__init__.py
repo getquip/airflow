@@ -7,8 +7,7 @@ import pandas as pd
 from typing import List, Dict
 
 # Third-party package imports
-from google.cloud import storage, bigquery
-from airflow.exceptions import AirflowSkipException
+from airflow.models import TaskInstance
 
 # Local package imports
 from custom_packages import airbud
@@ -83,10 +82,7 @@ class GetWenParker(airbud.GetClient):
 
             # Push list of new GCS files to XCom
             task_instance = kwargs['task_instance']
-            task_instance.xcom_push(
-                key='sftp_files',
-                value=new_file_paths
-            )
+            task_instance.xcom_push(key='sftp_files', value=new_file_paths)
             log.info(f"Stored file names for {endpoint} in XComs: {new_file_paths}")
             return "success"
         else:
@@ -104,7 +100,7 @@ class GetWenParker(airbud.GetClient):
         task_instance = kwargs['ti']
         upstream_task = f'get__{ endpoint }.ingest_{ endpoint }_files'
         return_value = task_instance.xcom_pull(task_ids=upstream_task, key='return_value')
-
+        print(return_value)
         if return_value == "success":
             # Get the file names from XCom
             sftp_files = task_instance.xcom_pull(task_ids=upstream_task, key='sftp_files')
@@ -153,7 +149,7 @@ class GetWenParker(airbud.GetClient):
             task_instance.xcom_push(key='files_to_move', value=files_to_move)
             task_instance.xcom_push(key='bad_files', value=bad_files)
         else:
-            raise AirflowSkipException("Skipped because no new files were found.")
+            log.info("Do Nothing.")
 
     """Move files in SFTP to processed folder."""
     def move_to_processed(
@@ -167,20 +163,21 @@ class GetWenParker(airbud.GetClient):
         files_to_move = task_instance.xcom_pull(task_ids=upstream_task, key='files_to_move')
         bad_files = task_instance.xcom_pull(task_ids=upstream_task, key='bad_files')
 
-        if len(files_to_move) > 0:
-            for source_file in files_to_move:
-                processed_path = f"{self.parent_path}/{endpoint}/processed"
-                try:
-                    log.info(f"Moving {source_file} to {processed_path}...")
-                    airbud.move_file_on_sftp(self.sftp_conn_id, source_file, processed_path)
-                    return "success"
-                except Exception as e:
-                    log.error(f"Error moving {source_file} to processed: {e}")
-                    bad_files.append(source_file)
-        elif len(bad_files) == 0 and len(files_to_move) == 0:
-            raise AirflowSkipException("Skipped because no new files were found.")
+        if files_to_move:
+            if len(files_to_move) > 0:
+                for source_file in files_to_move:
+                    processed_path = f"{self.parent_path}/{endpoint}/processed"
+                    try:
+                        log.info(f"Moving {source_file} to {processed_path}...")
+                        airbud.move_file_on_sftp(self.sftp_conn_id, source_file, processed_path)
+                        return "success"
+                    except Exception as e:
+                        log.error(f"Error moving {source_file} to processed: {e}")
+                        bad_files.append(source_file)
+            elif len(bad_files) == 0 and len(files_to_move) == 0:
+                log.info("Do Nothing.")
         
-        # raise error if there are any bad files
-        if len(bad_files) > 0:
-            raise Exception(f"Failed to fully process { len(bad_files) } files: {bad_files}")
-	
+            # raise error if there are any bad files
+            if len(bad_files) > 0:
+                raise Exception(f"Failed to fully process { len(bad_files) } files: {bad_files}")
+        
