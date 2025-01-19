@@ -1,25 +1,37 @@
 
 # Standart Library imports
-from datetime import datetime
 import json
+from datetime import datetime
 
 # Third-party imports
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.models import Variable
-from airflow.utils.task_group import TaskGroup
-
+from airflow.operators.python import PythonOperator
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 # Custom package imports
 from custom_packages.cleanup import cleanup_xcom
 from custom_packages.notifications import send_slack_alert
 from custom_packages import airbud
-from clients.ceva import GetCeva
 
 # Define constants for data source
 PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
 GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
-SFTP_CONN_ID = "aws_s3"
-CLIENT = GetCeva()
+AWS_CONN_ID = "aws_s3"
+
+# Function to list objects in an S3 bucket
+def list_s3_objects():
+    """
+    List objects in an S3 bucket.
+
+    :param bucket_name: Name of the S3 bucket.
+    :param aws_conn_id: Airflow connection ID for AWS (default: aws_default).
+    """
+    bucket = "c5aa903e-2d4b-4853-b78c-af44763ec434"
+    s3_hook = S3Hook(aws_conn_id=AWS_CONN_ID)
+    objects = s3_hook.list_keys(bucket_name=bucket)
+    print(f"Objects in bucket {bucket}: {objects}")
+    return objects
+
 
 # Define default arguments for the DAG
 default_args = {
@@ -27,7 +39,6 @@ default_args = {
     "email_on_failure": False,
     "email_on_retry": False,
     "retries": 0,
-    "catchup": False,
     "max_active_runs": 1,
     "on_success_callback": cleanup_xcom,
     "on_failure_callback": [send_slack_alert],
@@ -35,25 +46,16 @@ default_args = {
 
 # Define the DAG
 with DAG(
-    dag_id="get__wen_parker",
+    dag_id="get__ceva",
     default_args=default_args,
     description="A DAG to sync files from Wen Parker's SFTP server",
     schedule_interval="0 12 * * *", # Daily @ 7:00 AM EST
-    start_date=datetime(2025, 1, 1)
+    start_date=datetime(2025, 1, 1),
+    catchup=False
 ) as dag:
 
-	# Define ingestion tasks
-	for endpoint, endpoint_kwargs in CLIENT.endpoints.items():
-		ingestion_task = PythonOperator(
-			task_id=f"ingest_{endpoint}_data",
-			python_callable=airbud.ingest_from_sftp,
-			op_kwargs={
-				"project_id": PROJECT_ID,
-				"bucket_name": GCS_BUCKET,
-				"sftp_conn_id": SFTP_CONN_ID,
-				"client": CLIENT,
-				"endpoint": endpoint,
-				"endpoint_kwargs": endpoint_kwargs,
-			},
-			dag=dag,
-		)
+	test_connection_task = PythonOperator(
+        task_id="test_aws_connection_task",
+        python_callable=list_s3_objects,
+        provide_context=True,
+    )

@@ -1,18 +1,17 @@
 # Standard library imports
-from datetime import datetime
 import json
+from datetime import datetime
 
 # Third-party imports
 from airflow import DAG
-from airflow.operators.python import PythonOperator
 from airflow.models import Variable
 from airflow.utils.task_group import TaskGroup
+from airflow.operators.python import PythonOperator
 
 # Custom package imports
+from clients.recharge import GetRecharge
 from custom_packages.cleanup import cleanup_xcom
 from custom_packages.notifications import send_slack_alert
-from custom_packages import airbud
-from clients.recharge import GetRecharge
 
 
 # Define constants for data source
@@ -20,8 +19,7 @@ PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
 GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
 
 # Initialize the GetRecharge class
-API_KEY = airbud.get_secrets(PROJECT_ID, 'recharge', prefix="api__")
-RECHARGE_CLIENT = GetRecharge(API_KEY['api_key'])
+CLIENT = GetRecharge(PROJECT_ID, GCS_BUCKET)
 
 # Define default arguments for the DAG
 default_args = {
@@ -29,7 +27,6 @@ default_args = {
     "email_on_failure": False,
     "email_on_retry": False,
     "retries": 1,
-    "catchup": False,
     "max_active_runs": 1,
     "on_success_callback": cleanup_xcom,
     "on_failure_callback": [send_slack_alert],
@@ -41,19 +38,18 @@ with DAG(
     schedule_interval="0 */6 * * *",  # Every 6 hours
     default_args=default_args,
     start_date=datetime(2024, 12, 1),
+    catchup=False,
 ) as dag:
 
-    # Define ingestion tasks
-    for endpoint, endpoint_kwargs in RECHARGE_CLIENT.endpoints.items():
+    for endpoint, endpoint_kwargs in CLIENT.endpoints.items():
+
+		# Group tasks by endpoint
         with TaskGroup(group_id=f"get__{endpoint}") as endpoint_group:
 
             ingestion_task = PythonOperator(
                 task_id= f"ingest_{ endpoint }_data",
-                python_callable=airbud.ingest_from_api,
+                python_callable=CLIENT.ingest_data,
                 op_kwargs={
-                    "project_id": PROJECT_ID,
-                    "bucket_name": GCS_BUCKET,
-                    "client": RECHARGE_CLIENT,
                     "endpoint": endpoint,  
                     "endpoint_kwargs": endpoint_kwargs,
                     "paginate": True
@@ -63,14 +59,10 @@ with DAG(
 
             upload_to_bq_task = PythonOperator(
                 task_id=f"upload_{ endpoint }_data_to_bq",
-                python_callable=airbud.load_data_to_bq_from_api,
+                python_callable=CLIENT.load_to_bq,
                 op_kwargs={
-                    "project_id": PROJECT_ID,
-                    "bucket_name": GCS_BUCKET,
-                    "client": RECHARGE_CLIENT,
                     "endpoint": endpoint,
-                    "endpoint_kwargs": endpoint_kwargs,
-                    "paginate": True
+                    "endpoint_kwargs": endpoint_kwargs
                 },
                 dag=dag
             )

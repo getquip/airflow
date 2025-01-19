@@ -79,7 +79,7 @@ table_ref = post_to_bq.get_destination(bq_client, RECHARGE_CLIENT, endpoint, end
 
 # Insert rows into BigQuery in chunks
 chunk_size = endpoint_kwargs.get("chunk_size", 8000)
-post_to_bq.insert_records(bq_client, table_ref, records, max_retries=3, chunk_size=chunk_size)
+post_to_bq.insert_records_to_bq(bq_client, table_ref, records, max_retries=3, chunk_size=chunk_size)
 
 ## UPLOAD TP GCS
 from google.cloud import storage

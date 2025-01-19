@@ -1,8 +1,12 @@
-from google.cloud import secretmanager
+# Standard library imports
 import json
 from typing import Dict
 from logging import getLogger
 
+# Third-party imports
+from google.cloud import secretmanager
+
+# Initialize logger
 log = getLogger(__name__)
 
 def get_secrets(

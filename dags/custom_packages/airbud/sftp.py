@@ -1,19 +1,20 @@
 # Import Standard Libraries
-import pandas as pd
-from typing import List, Dict
-import stat
 import os
-import logging
+import stat
 import json
 import time
+import logging
+import pandas as pd
+from typing import List, Dict
 
 # Import Third Party Libraries
-from airflow.providers.sftp.hooks.sftp import SFTPHook
 from airflow.models.dagrun import DagRun
+from airflow.providers.sftp.hooks.sftp import SFTPHook
 
 # Initialize logger
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 def clean_column_names(
     csv_file: str, # Path to the CSV file
@@ -23,7 +24,7 @@ def clean_column_names(
     
     # Read the CSV file into a DataFrame
     df = pd.read_csv(csv_file)
-    log.info(f"Read {len(df)} rows from {csv_file}")
+    log.debug(f"Read {len(df)} rows from {csv_file}")
 
     # Get the original column names from the first row
     cleaned_columns = []
@@ -52,7 +53,7 @@ def clean_column_names(
 
     # Convert the DataFrame to a list of dictionaries
     records = json.loads(df.to_json(orient='records', lines=False))
-    log.info(f"Converted {len(records)} rows to JSON records")
+    log.debug(f"Converted {len(records)} rows to JSON records")
     return records
 
 def list_sftp_files(
@@ -128,9 +129,8 @@ def download_sftp_files(
 
 def move_file_on_sftp(
     sftp_conn_id: str,  # SFTP connection ID
-    file_path: str,  # Path to the file
-    file_name: str,  # Name of the file
-    sftp_path: str # Root path of the endpoint folder
+    source_file: str,  # Path to the file in sftp
+    processed_path: str,  # Name of the file
     ) -> None:
     """Move a file from the source path to the 'processed' directory on SFTP."""
     max_retries = 3  # Number of retry attempts
@@ -139,17 +139,17 @@ def move_file_on_sftp(
     sftp_hook = SFTPHook(sftp_conn_id)
 
     # Set the destination directory and path
-    destination_path = os.path.join(sftp_path, "processed", file_name)
+    file_name = os.path.basename(source_file)
+    destination_path = os.path.join(processed_path, file_name)
 
-    processed_dir = os.path.join(sftp_path, "processed")
     for attempt in range(1, max_retries + 1):
         try:
             with sftp_hook.get_conn() as sftp:
                 try:
-                    sftp.stat(processed_dir)  # Check if "processed" exists
+                    sftp.stat(processed_path)  # Check if "processed" exists
                 except FileNotFoundError:
-                    log.info(f"Creating 'processed' directory at {sftp_path}")
-                    sftp.mkdir(processed_dir)
+                    log.info(f"Creating 'processed' directory {processed_path}")
+                    sftp.mkdir(processed_path)
 
                 # Move (rename) the file to the 'processed' directory
                 sftp.rename(file_path, destination_path)

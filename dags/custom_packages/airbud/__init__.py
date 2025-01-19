@@ -3,11 +3,28 @@ import pkgutil
 import json
 import os
 import shutil
+from typing import List, Dict
+
+# Custom package imports
+from custom_packages.airbud.gcs import *
+from custom_packages.airbud.post_to_bq import *
+from custom_packages.airbud.get_api import *
+from custom_packages.airbud.get_secrets import *
+from custom_packages.airbud.sftp import *
+from custom_packages.airbud.airflow import *
+
 
 class GetClient:
-    def __init__(self):
-        self.base_url = None
-        self.headers = None
+    def __init__(self, project_id: str, bucket_name: str, dataset: str):
+        self.project_id = project_id
+        self.bucket_name = bucket_name
+
+        # Initialize GCP clients
+        self.gcs_client = storage.Client(project_id)
+        self.bq_client = bigquery.Client(project_id)
+
+        # Initialize BigQuery Dataset
+        create_dataset_if_not_exists(self.bq_client, dataset)
 
     def load_endpoints(self, endpoint_file: str) -> Dict:
         """
@@ -43,3 +60,35 @@ class GetClient:
             except Exception as e:
                 raise RuntimeError(f"Failed to load endpoints: {e}")
         return schemas
+
+    def generate_bq_tables(self) -> None:
+        """
+        Generates the BigQuery destination table name for a given endpoint.
+        """
+        # Parse client object
+        bq_client = self.bq_client
+        dataset = self.dataset
+
+        for endpoint, endpoint_kwargs in self.endpoints.items():
+            # Get the table reference
+            table_ref = bq_client.dataset(dataset).table(endpoint)
+            
+            try: # Check if the table exists
+                bq_client.get_table(table_ref)
+
+            except Exception as e: # Create the dataset/table if it doesn't exist
+                schema = self.schemas[endpoint]
+                create_table_if_not_exists(bq_client, endpoint_kwargs, schema, table_ref)
+                
+                # Retry logic for table availability
+                max_retries = 5
+                for attempt in range(max_retries):
+                    try:
+                        bq_client.get_table(table_ref)
+                        log.info(f"Table { endpoint } is now available.")
+                        break
+                    except Exception:
+                        if attempt == max_retries - 1:
+                            raise RuntimeError(f"Table { endpoint } not found after { max_retries } retries.")
+                        log.warninging(f"Table { endpoint } not found. Retrying in 5 seconds...")
+                        time.sleep(5)

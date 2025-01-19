@@ -4,11 +4,11 @@ from airflow.providers.slack.notifications.slack import send_slack_notification
 from airflow.models import Variable
 
 # Initialize logger
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
 def send_slack_alert(context):
-    logging.info(f"Composing Slack Alert...")
+    log.debug(f"Composing Slack Alert...")
     # Access DAG context
     dag_name = context.get('dag').dag_id
     task_name = context.get('task').task_id
@@ -35,4 +35,4 @@ def send_slack_alert(context):
 
     # Send the message
     notifier.notify(context)
-    logging.info(f"Slack Alert: {slack_msg}")
+    log.debug(f"Slack Alert: {slack_msg}")

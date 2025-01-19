@@ -13,8 +13,17 @@ from custom_packages.airbud import gcs
 from custom_packages.airbud import post_to_bq
 
 # Initialize logger
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
+
+"""
+This function: 
+    1. ingests unprocessed data from an SFTP server
+    2. adds `source_file_name` and `source_synced_at` fields to the data
+    3. loads the csv to GCS
+    4. loads the data to BigQuery
+    5. moves the processed files to the processed folder in the SFTP server.
+"""
 
 def ingest_from_sftp(
     project_id: str,
@@ -56,7 +65,7 @@ def ingest_from_sftp(
                 table_ref = post_to_bq.get_destination(bq_client, client, endpoint, endpoint_kwargs)
 
                 # Insert the records to BigQuery
-                post_to_bq.insert_records(bq_client, table_ref, records)
+                post_to_bq.insert_records_to_bq(bq_client, table_ref, records)
                 
                 # Upload the files to GCS
                 gcs.upload_csv_to_gcs(gcs_client, bucket_name, gcs_path, local_file)
@@ -68,7 +77,7 @@ def ingest_from_sftp(
 
             except Exception as e:
                 # If failed to insert to BigQuery, store the file in error folder of the endpoint
-                log.warning(f"Error uploading {local_file} to Quip Environment: {e}")
+                log.warninging(f"Error uploading {local_file} to Airflow Environment: {e}")
 
                 # Create error folder in GCS
                 dag_run: DagRun = kwargs.get('dag_run')
