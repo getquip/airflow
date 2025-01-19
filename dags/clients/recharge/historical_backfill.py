@@ -1,12 +1,11 @@
 #INGEST DATA
 import pandas as pd
-from custom_packages.airbud.get_data import get_data, retry_get_data
-from custom_packages.airbud.get_secrets import get_secrets
+from custom_packages import airbud
 from clients.recharge import GetRecharge
 
 
 project_id = 'quip-dw-raw'
-API_KEY = get_secrets(project_id, 'recharge', prefix="api__")
+API_KEY = airbud.get_secrets(project_id, 'recharge', prefix="api__")
 RECHARGE_CLIENT = GetRecharge(API_KEY['api_key'])
 
 endpoint = 'charges'
@@ -60,8 +59,6 @@ while pd.to_datetime(params["updated_at_max"]) < stop_backfill:
 
 
 ## UPLOAD TO BIGQUERY
-from google.cloud import bigquery
-from custom_packages.airbud import post_to_bq
 import json
 
 # Add metadata
@@ -72,23 +69,17 @@ records = json.loads(df.to_json(orient='records', lines=False))
 endpoint_kwargs = RECHARGE_CLIENT.endpoints[endpoint]
 
 # Initialize BigQuery client
-bq_client = bigquery.Client(project=project_id)
+bq_client = RECHARGE_CLIENT.bq_client
 
 # Ensure the destination table exists 
-table_ref = post_to_bq.get_destination(bq_client, RECHARGE_CLIENT, endpoint, endpoint_kwargs)
+table_ref = bq_client.dataset("recharge").table(endpoint)
 
 # Insert rows into BigQuery in chunks
 chunk_size = endpoint_kwargs.get("chunk_size", 8000)
-post_to_bq.insert_records_to_bq(bq_client, table_ref, records, max_retries=3, chunk_size=chunk_size)
-
-## UPLOAD TP GCS
-from google.cloud import storage
-
-# Initialize GCS client
-gcs_client = storage.Client(project_id)
+airbud.insert_records_to_bq(bq_client, table_ref, records, max_retries=3, chunk_size=chunk_size)
 
 # Get the GCS bucket object
-bucket = gcs_client.get_bucket("quip_airflow")
+bucket = RECHARGE_CLIENT.gcs_bucket
 
 # Upload the JSON data as a string to GCS
 filename = f"get/recharge/{endpoint}/historical_to_2025.json"

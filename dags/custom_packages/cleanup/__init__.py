@@ -11,4 +11,4 @@ log = logging.getLogger(__name__)
 def cleanup_xcom(context, session=None):
     dag_id = context["ti"]["dag_id"]
     session.query(XCom).filter(XCom.dag_id == dag_id).delete()
-    log.debug(f"{ dag_id } XComs cleaned up")
+    log.info(f"{ dag_id } XComs cleaned up")

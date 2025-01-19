@@ -13,14 +13,14 @@ def store_next_page_across_dags(dataset: str, endpoint: str, last_page: str) -> 
     """Store the last page in an Airflow Variable."""
     bookmark_name = f"{dataset}__{endpoint}"
     Variable.set(bookmark_name, last_page)
-    log.debug(f"Last page saved as Airflow Variable named: {bookmark_name}.")
+    log.info(f"Last page saved as Airflow Variable named: {bookmark_name}.")
 
 def get_last_page_from_last_dag_run(name: str) -> str:
     """Retrieve the last page from an Airflow Variable."""
     try:
         next_page = Variable.get(name)
-        log.debug(f"Retrieved next page: {next_page}")
+        log.info(f"Retrieved next page: {next_page}")
     except:
-        log.debug("No next page stored. Starting pagination from the beginning.")
+        log.info("No next page stored. Starting pagination from the beginning.")
         next_page = None
     return(next_page)

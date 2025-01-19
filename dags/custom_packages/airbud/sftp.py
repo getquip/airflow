@@ -24,7 +24,7 @@ def clean_column_names(
     
     # Read the CSV file into a DataFrame
     df = pd.read_csv(csv_file)
-    log.debug(f"Read {len(df)} rows from {csv_file}")
+    log.info(f"Read {len(df)} rows from {csv_file}")
 
     # Get the original column names from the first row
     cleaned_columns = []
@@ -53,7 +53,7 @@ def clean_column_names(
 
     # Convert the DataFrame to a list of dictionaries
     records = json.loads(df.to_json(orient='records', lines=False))
-    log.debug(f"Converted {len(records)} rows to JSON records")
+    log.info(f"Converted {len(records)} rows to JSON records")
     return records
 
 def list_sftp_files(
@@ -115,12 +115,12 @@ def download_sftp_files(
     sftp_hook = SFTPHook(sftp_conn_id)
 
     with sftp_hook.get_conn() as sftp:
-        for file_path in files:
+        for source_file in files:
             try:
                 # Extract the file name for env path
-                file_name = os.path.basename(file_path)
+                file_name = os.path.basename(source_file)
                 # Download the file to the current working directory without the source path
-                sftp.get(file_path, file_name)
+                sftp.get(source_file, file_name)
                 print(f"Downloaded: {file_name}")
             except FileNotFoundError:
                 raise FileNotFoundError(f"File not found on SFTP server: {file_name}")
@@ -152,8 +152,8 @@ def move_file_on_sftp(
                     sftp.mkdir(processed_path)
 
                 # Move (rename) the file to the 'processed' directory
-                sftp.rename(file_path, destination_path)
-                log.info(f"Successfully moved file from {file_path} to {destination_path}.")
+                sftp.rename(source_file, destination_path)
+                log.info(f"Successfully moved file from {source_file} to {destination_path}.")
                 break
         except Exception as e:
             log.error(f"Attempt {attempt} failed: {e}")
@@ -162,5 +162,5 @@ def move_file_on_sftp(
                 time.sleep(retry_delay)
             else:
                 log.error(f"All {max_retries} attempts failed.")
-                raise Exception(f"Failed to move file from {file_path} to 'processed': {e}")
+                raise Exception(f"Failed to move file from {source_file} to 'processed': {e}")
 

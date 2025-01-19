@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %
 log = logging.getLogger(__name__)
 
 def send_slack_alert(context):
-    log.debug(f"Composing Slack Alert...")
+    log.info(f"Composing Slack Alert...")
     # Access DAG context
     dag_name = context.get('dag').dag_id
     task_name = context.get('task').task_id
@@ -35,4 +35,4 @@ def send_slack_alert(context):
 
     # Send the message
     notifier.notify(context)
-    log.debug(f"Slack Alert: {slack_msg}")
+    log.info(f"Slack Alert: {slack_msg}")
