@@ -1,12 +1,15 @@
 
-from google.cloud import bigquery
-from typing import List, Dict
+# Import Standard Libraries
 import json
 import time
 import logging
+from typing import List, Dict
+
+# Import Third Party Libraries
+from google.cloud import bigquery
 
 # Initialize logger
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
 def create_dataset_if_not_exists(
@@ -69,7 +72,7 @@ def create_table_if_not_exists(
         except Exception as e:
             log.error(f"An error occurred while trying to create the BigQuery table: {e}")
 
-def insert_records(
+def insert_records_to_bq(
         client: object,  # BigQuery client object
         table_ref: object,  # BigQuery table reference
         records: List[Dict],  # List of records to insert
@@ -92,42 +95,10 @@ def insert_records(
                     log.info(f"Successfully inserted chunk {i}-{i + len(chunk)}.")
                     break  # Exit retry loop on success
             except Exception as e:
-                log.warning(f"Attempt {attempt + 1} failed for chunk {i}-{i + len(chunk)}: {e}")
+                log.warninging(f"Attempt {attempt + 1} failed for chunk {i}-{i + len(chunk)}: {e}")
                 if attempt == max_retries - 1:
                     log.error(f"Max retries reached for chunk {i}-{i + len(chunk)}. Failing.")
                     raise RuntimeError(f"Unable to insert data after {max_retries} retries for chunk {i}-{i + len(chunk)}.")
                 time.sleep(5)
 
     log.info(f"All {total_records} records inserted successfully into the table.")
-
-def get_destination(
-        bq_client: object, # BigQuery client object
-        client: object, # DAG client object
-        endpoint: str, 
-        endpoint_kwargs: dict 
-    ) -> object:
-    """Get the BigQuery table reference for the endpoint."""
-    # Get the table reference
-    table_ref = bq_client.dataset(client.dataset).table(endpoint)
-
-    # Check if the table exists
-    try:
-        bq_client.get_table(table_ref)
-    except Exception as e: # Create the dataset/table if it doesn't exist
-        schema = client.schemas[endpoint]
-        create_dataset_if_not_exists(bq_client, client.dataset)
-        create_table_if_not_exists(bq_client, endpoint_kwargs, schema, table_ref)
-        
-        # Retry logic for table availability
-        max_retries = 5
-        for attempt in range(max_retries):
-            try:
-                bq_client.get_table(table_ref)
-                log.info(f"Table { endpoint } is now available.")
-                break
-            except Exception:
-                if attempt == max_retries - 1:
-                    raise RuntimeError(f"Table { endpoint } not found after { max_retries } retries.")
-                log.warning(f"Table { endpoint } not found. Retrying in 5 seconds...")
-                time.sleep(5)
-    return table_ref
