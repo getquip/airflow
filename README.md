@@ -65,3 +65,4 @@ Example:
   - DAG named `get__recharge`
   - Stored at: `quip-dw-raw-dev/quip_airflow/get/recharge/events/file.json`
   - GCS path: `quip-dw-raw/quip_airflow/get/recharge/events/file.json`
+ 
