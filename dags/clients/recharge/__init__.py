@@ -109,7 +109,10 @@ class GetRecharge(airbud.GetClient):
         # Pass bookmark for next run
         if len(records) > 0:
             df = pd.DataFrame(records)
-            df_max = df["created_at"].max() if endpoint == "events" else df["updated_at"].max()
+            if endpoint == "events":
+                df_max = df["created_at"].max() 
+            else:
+                df_max = df["updated_at"].max()
             next_page = str(max(pd.to_datetime(df_max), stop_at))
         else:
             next_page = str(stop_at)
