@@ -25,7 +25,7 @@
 	},
 	{
 		"name": "complete_dstamp",
-		"type": "INTEGER"
+		"type": "STRING"
 	},
 	{
 		"name": "code",
@@ -53,7 +53,7 @@
 	},
 	{
 		"name": "batch_id",
-		"type": "TIMESTAMP"
+		"type": "STRING"
 	},
 	{
 		"name": "source_file_name",

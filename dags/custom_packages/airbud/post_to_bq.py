@@ -68,9 +68,9 @@ def create_table_if_not_exists(
         # Create table in BQ
         try:
             client.create_table(table)
-            log.info(f"BigQuery Table created successfully.")   
+            log.info(f"{table_ref} created successfully.")   
         except Exception as e:
-            log.error(f"An error occurred while trying to create the BigQuery table: {e}")
+            raise Exception(f"An error occurred while trying to create {table_ref}: {e}")
 
 def insert_records_to_bq(
         client: object,  # BigQuery client object
@@ -92,13 +92,61 @@ def insert_records_to_bq(
                     log.error(f"Errors encountered in chunk {i}-{i + len(chunk)}: {errors}")
                     raise RuntimeError(f"Insertion failed for chunk {i}-{i + len(chunk)}")
                 else:
-                    log.info(f"Successfully inserted chunk {i}-{i + len(chunk)}.")
+                    log.info(f"Successfully inserted chunk {i}-{i + len(chunk)}")
                     break  # Exit retry loop on success
             except Exception as e:
-                log.warninging(f"Attempt {attempt + 1} failed for chunk {i}-{i + len(chunk)}: {e}")
+                log.warning(f"Attempt {attempt + 1} failed for chunk {i}-{i + len(chunk)}: {e}")
                 if attempt == max_retries - 1:
                     log.error(f"Max retries reached for chunk {i}-{i + len(chunk)}. Failing.")
                     raise RuntimeError(f"Unable to insert data after {max_retries} retries for chunk {i}-{i + len(chunk)}.")
                 time.sleep(5)
 
     log.info(f"All {total_records} records inserted successfully into the table.")
+
+def insert_files_to_bq(
+    files: List[str], 
+    endpoint: str, 
+    dataset: str,
+    bq_client: object,
+    gcs_bucket: str,
+    **kwargs
+    ) -> (List[str], List[str]):
+    files_to_move = []
+    bad_files = []
+    # Process each file
+    for source_file in files:
+        # Get file name
+        local_file = os.path.basename(source_file)
+        log.info(f"Processing {source_file}...")
+
+        try: # Get records from GCS
+            filename = generate_json_blob_name(
+                dataset, 
+                endpoint, 
+                supplemental=local_file, 
+                **kwargs
+            )
+            records = get_records_from_file(gcs_bucket, filename)
+            log.info(f"Successfully loaded {len(records)} records from GCS.")
+        except Exception as e:
+            log.error(f"Failed to get records from file: {e}")
+            bad_files.append(local_file)
+            records = []
+
+        if len(records) > 0:
+            try: # Upload records to BigQuery
+                table_ref = bq_client.dataset(dataset).table(endpoint)
+
+                # Insert the records to BigQuery
+                insert_records_to_bq(bq_client, table_ref, records)
+                log.info(f"Successfully uploaded {local_file} to BigQuery.")
+                files_to_move.append(source_file)
+            except Exception as e:
+                log.error(f"Error uploading {local_file} to BigQuery: {e}")
+                bad_files.append(local_file)
+
+        if len(bad_files) > 0:
+            log.error(f"Failed to process { len(bad_files) } files: {bad_files}")
+        if len(files_to_move) > 0:
+            log.info(f"Successfully uploaded { len(files_to_move) } files to BigQuery.")
+        return files_to_move, bad_files

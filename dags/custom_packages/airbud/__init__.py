@@ -10,7 +10,7 @@ from custom_packages.airbud.gcs import *
 from custom_packages.airbud.post_to_bq import *
 from custom_packages.airbud.get_api import *
 from custom_packages.airbud.secrets import *
-from custom_packages.airbud.sftp import *
+from custom_packages.airbud.file_storage import *
 from custom_packages.airbud.airflow import *
 
 
@@ -91,5 +91,5 @@ class GetClient:
                     except Exception:
                         if attempt == max_retries - 1:
                             raise RuntimeError(f"Table { endpoint } not found after { max_retries } retries.")
-                        log.warninging(f"Table { endpoint } not found. Retrying in 5 seconds...")
+                        log.warning(f"Table { endpoint } not found. Retrying in 5 seconds...")
                         time.sleep(5)

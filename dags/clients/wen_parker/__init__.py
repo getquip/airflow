@@ -70,10 +70,10 @@ class GetWenParker(airbud.GetClient):
                 log.info(f"Processing {source_file}...")
                 
                 # Upload raw csv file to GCS
-                airbud.upload_csv_to_gcs(self.gcs_bucket, gcs_path, local_file)
+                local_file, dag_run_date = airbud.upload_csv_to_gcs(self.gcs_bucket, gcs_path, local_file)
 
                 # Clean the column names and convert to JSON
-                records = airbud.clean_column_names(local_file, **kwargs)
+                records = airbud.clean_column_names(local_file, dag_run_date)
                 
                 # upload the cleaned records to GCS
                 filename = airbud.generate_json_blob_name(
@@ -105,45 +105,14 @@ class GetWenParker(airbud.GetClient):
             # Get the file names from XCom
             sftp_files = task_instance.xcom_pull(task_ids=upstream_task, key='sftp_files')
 
-            files_to_move = []
-            bad_files = []
-            # Process each file
-            for source_file in sftp_files:
-                log.info(f"Processing {source_file}...")
-                # Get file names
-                local_file = os.path.basename(source_file)
-
-                try: # Get records from GCS
-                    filename = airbud.generate_json_blob_name(
-                        self.dataset, 
-                        endpoint, 
-                        supplemental=local_file, 
-                        **kwargs
-                    )
-                    records = airbud.get_records_from_file(self.gcs_bucket, filename)
-                    log.info(f"Successfully loaded {len(records)} records from GCS.")
-                except Exception as e:
-                    log.error(f"Failed to get records from file: {e}")
-                    bad_files.append(local_file)
-                    records = []
-
-                if len(records) > 0:
-                    try: # Upload records to BigQuery
-                        # Get or create the BigQuery table
-                        table_ref = self.bq_client.dataset(self.dataset).table(endpoint)
-
-                        # Insert the records to BigQuery
-                        airbud.insert_records_to_bq(self.bq_client, table_ref, records)
-                        log.info(f"Successfully uploaded {local_file} to BigQuery.")
-                        files_to_move.append(source_file)
-                    except Exception as e:
-                        log.error(f"Error uploading {local_file} to BigQuery: {e}")
-                        bad_files.append(local_file)
-
-            if len(bad_files) > 0:
-                log.error(f"Failed to process { len(bad_files) } files: {bad_files}")
-            if len(files_to_move) > 0:
-                log.info(f"Successfully uploaded { len(files_to_move) } files to BigQuery.")
+            files_to_move, bad_files = airbud.insert_files_to_bq(
+                files,
+                endpoint,
+                self.dataset,
+                self.bq_client,
+                self.gcs_bucket,
+                **kwargs
+                )
             # Push list of new GCS files to XCom
             task_instance = kwargs['task_instance']
             task_instance.xcom_push(key='files_to_move', value=files_to_move)

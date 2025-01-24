@@ -1,4 +1,5 @@
 # Standard imports
+import os
 import json
 import logging
 import pandas as pd
@@ -22,7 +23,7 @@ def generate_json_blob_name(
     """Generate the destination blob name for a JSON file in GCS."""
     # Get DAG context
     dag_run: DagRun = kwargs.get('dag_run')
-    dag_run_date = dag_run.execution_date
+    dag_run_date = str(dag_run.execution_date)
 
     # Generate the GCS file path
     rooth_path = f"get/{dataset_name}/{endpoint}"
@@ -30,8 +31,8 @@ def generate_json_blob_name(
         filename = f"{rooth_path}/DAG_RUN:{dag_run_date}/{supplemental}.json"
     else:
         filename = f"{rooth_path}/DAG_RUN:{dag_run_date}.json"
-
-    return filename
+    log.info(f"Generated GCS blob name: {filename}")
+    return filename, dag_run_date
 
 def upload_json_to_gcs(
     bucket: object, # GCS bucket client object
@@ -50,7 +51,7 @@ def upload_json_to_gcs(
     # Upload the JSON data as a string to GCS
     blob = bucket.blob(filename)
     blob.upload_from_string(json.dumps(records), content_type='application/json')
-    log.info(f"Uploaded data to GCS: {filename}")
+    log.info(f"Uploaded json data to GCS: {filename}")
 
 def get_records_from_file(
     bucket: object, # GCS bucket client object
@@ -75,12 +76,11 @@ def get_records_from_file(
 def list_all_files(
     bucket: object, # GCS bucket client object
     path: str,
-    **kwargs
     ) -> List[str]:
     """List all files in a Google Cloud Storage (GCS) bucket."""
 
     # List all files in the GCS bucket under the given path
-    blobs = bucket.list_blobs(prefix=path, **kwargs)
+    blobs = bucket.list_blobs(prefix=path)
     files = sorted([blob.name for blob in blobs])
 
     return files
@@ -88,15 +88,16 @@ def list_all_files(
 def upload_csv_to_gcs(
     bucket: object, # GCS bucket client object
     root_path: str,
-    filename: str,
-    **kwargs
-    ) -> None:
+    local_file: str,
+    ) -> str:
     """Upload a CSV file to Google Cloud Storage (GCS)."""
-    
+
+    filename = os.path.basename(local_file)
     # Set the GCS file path
     gcs_file_path = f"{root_path}/raw/{filename}"
 
     # Upload the file to GCS
     blob = bucket.blob(gcs_file_path)
-    blob.upload_from_filename(filename)
-    log.info(f"Uploaded to GCS: {blob.name}")
+    blob.upload_from_filename(local_file)
+    log.info(f"Uploaded to csv to GCS: {blob.name}")
+    return filename.replace(".csv", "")
