@@ -1,8 +1,9 @@
-import requests
-import json
-from typing import Dict, List
+# Standard imports
 import time
+import json
 import logging
+import requests
+from typing import Dict, List
 
 # Initialize logger
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -12,9 +13,9 @@ log = logging.getLogger(__name__)
 def get_data(
         url: str, # The URL of the API endpoint
         headers: dict, # The request headers
-        params: dict, # The query parameters for the request, if any
-        data: dict, # The request body data, if any
-        json_data: dict # The JSON data to send with the request, if any
+        params: dict =None, # The query parameters for the request, if any
+        data: dict =None, # The request body data, if any
+        json_data: dict =None # The JSON data to send with the request, if any
     ) -> Dict: # The response object
     """Get data from an API endpoint."""
     response = requests.get(
@@ -30,9 +31,9 @@ def get_data(
 def retry_get_data(
         url: str, # The URL of the API endpoint
         headers: dict, # The request headers
-        params: dict, # The query parameters for the request, if any
-        data: dict, # The request body data, if any
-        json_data: dict # The JSON data to send with the request, if any
+        params: dict =None, # The query parameters for the request, if any
+        data: dict =None, # The request body data, if any
+        json_data: dict =None # The JSON data to send with the request, if any
     ) -> object: # The response object
     """Retries the API request."""
     max_retries = 6
@@ -45,7 +46,7 @@ def retry_get_data(
             break
         else:
             if response.status_code == 429:
-                log.debug(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
+                log.info(f"Rate Limit Exceeded. Waiting for 10 seconds before retrying.")
             else:
                 log.warning(f"Response: {response.status_code}. Retrying in 10 seconds...")
         time.sleep(10)

@@ -9,8 +9,8 @@ from typing import List, Dict
 from custom_packages.airbud.gcs import *
 from custom_packages.airbud.post_to_bq import *
 from custom_packages.airbud.get_api import *
-from custom_packages.airbud.get_secrets import *
-from custom_packages.airbud.sftp import *
+from custom_packages.airbud.secrets import *
+from custom_packages.airbud.file_storage import *
 from custom_packages.airbud.airflow import *
 
 
@@ -20,8 +20,9 @@ class GetClient:
         self.bucket_name = bucket_name
 
         # Initialize GCP clients
-        self.gcs_client = storage.Client(project_id)
         self.bq_client = bigquery.Client(project_id)
+        self.gcs_client = storage.Client(project_id)
+        self.gcs_bucket = self.gcs_client.get_bucket(bucket_name)
 
         # Initialize BigQuery Dataset
         create_dataset_if_not_exists(self.bq_client, dataset)
@@ -90,5 +91,5 @@ class GetClient:
                     except Exception:
                         if attempt == max_retries - 1:
                             raise RuntimeError(f"Table { endpoint } not found after { max_retries } retries.")
-                        log.warninging(f"Table { endpoint } not found. Retrying in 5 seconds...")
+                        log.warning(f"Table { endpoint } not found. Retrying in 5 seconds...")
                         time.sleep(5)

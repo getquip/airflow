@@ -28,8 +28,6 @@ default_args = {
     "email_on_retry": False,
     "retries": 0,
     "max_active_runs": 1,
-    "on_success_callback": cleanup_xcom,
-    "on_failure_callback": [send_slack_alert],
 }
 
 # Define the DAG
@@ -40,6 +38,8 @@ with DAG(
     schedule_interval="0 12 * * *", # Daily @ 7:00 AM EST
     start_date=datetime(2025, 1, 1),
 	catchup=False,
+    on_success_callback=cleanup_xcom,
+    on_failure_callback=[send_slack_alert],
 ) as dag:
 
 	for endpoint, endpoint_kwargs in CLIENT.endpoints.items():
@@ -70,10 +70,9 @@ with DAG(
 			move_to_processed_task = PythonOperator(
 				task_id=f"move_{endpoint}_files_to_processed",
 				python_callable=CLIENT.move_to_processed,
-				op_kwargs={
-					"endpoint": endpoint,
-				},
+				op_kwargs={"endpoint": endpoint},
 				dag=dag,
+   				trigger_rule="all_success", # Only run if all tasks are successful
 			)
 
 			ingestion_task >> load_to_bq_task >> move_to_processed_task

@@ -8,7 +8,6 @@ from typing import List, Dict
 # Third-party package imports
 from airflow.models import TaskInstance
 from google.cloud import storage, bigquery
-from airflow.exceptions import AirflowSkipException
 
 # Local package imports
 from custom_packages import airbud
@@ -19,8 +18,8 @@ log = logging.getLogger(__name__)
 
 class GetRecharge(airbud.GetClient):
     def __init__(self, project_id: str, bucket_name: str):
+        # Define client's dataset name
         self.dataset = "recharge"
-        self.base_url = "https://api.rechargeapps.com/"
 
         # Initialize the parent class
         super().__init__(project_id, bucket_name, self.dataset) 
@@ -31,6 +30,7 @@ class GetRecharge(airbud.GetClient):
             "X-Recharge-Access-Token": api_key['api_key'],
             "X-Recharge-Version": "2021-11",
         }
+        self.base_url = "https://api.rechargeapps.com/"
 
         # Initialize BigQuery tables if they doesn't exist
         self.endpoints = self.load_endpoints(f"{ self.dataset }/endpoints.json")
@@ -41,7 +41,6 @@ class GetRecharge(airbud.GetClient):
         self,
         endpoint: str,  # The API endpoint
         endpoint_kwargs: dict,  # Endpoint-specific arguments
-        url: str,  # The URL of the API endpoint
         **kwargs,
     ) -> List[Dict]:
         # API Documentation: https://developer.rechargepayments.com/2021-11/cursor_pagination
@@ -53,40 +52,42 @@ class GetRecharge(airbud.GetClient):
         # Get last bookmark, None if no bookmark
         last_ts = airbud.get_last_page_from_last_dag_run(f"{self.dataset}__{endpoint}")
         
-        # Only fetch the next day of data
+        # Logic to only fetch 1 day's worth of data (due to timeout issues)
         if last_ts:
+            # Determine stop_at date
             last_ts = pd.to_datetime(last_ts)
             stop_at = last_ts + pd.Timedelta(days=1)
-            if endpoint == "events":
-                params["created_at_min"] = last_ts
-            else:
-                params["updated_at_min"] = last_ts
-            # If last_ts is today, do not pass the updated_at_max parameter
-            if last_ts.date() == pd.Timestamp.utcnow().normalize().date() or stop_at.date() == pd.Timestamp.utcnow().normalize().date():
-                pass
-            # If stop_at date is today, do not pass the updated_at_max parameter
-            elif stop_at.date() == pd.Timestamp.utcnow().normalize().date():
-                pass
-            else:
-                if endpoint == "events":
-                    params["created_at_max"] = stop_at
-                else:
-                    params["updated_at_max"] = stop_at
+            # If last_ts is today, do not pass the max parameter
+            current_date = pd.Timestamp.utcnow().normalize().date()
+            if last_ts.date() == current_date or stop_at.date() == current_date:
+                stop_at = None
+            # If stop_at date is today, do not pass the max parameter
+            elif stop_at.date() == current_date:
+                stop_at = None
         else:
             last_ts = pd.to_datetime('2024-06-20')
             stop_at = pd.to_datetime('2024-06-21')
+
+        # Set the appropriate parameters for the endpoint
+        if endpoint == "events":
+            params["created_at_min"] = last_ts
+            if stop_at:
+                params["created_at_max"] = stop_at
+        else:
             params["updated_at_min"] = last_ts
-            params["updated_at_max"] = stop_at
-        log.info(f"Fetching data from {last_ts} to {stop_at}")
+            if stop_at:
+                params["updated_at_max"] = stop_at
+        log.info(f"Fetching data from {last_ts} to {stop_at if stop_at else 'now'}")
 
         # Paginate through the API endpoint and create a list of records
+        url = self.base_url + endpoint
         records = []
         while True:
-            response = airbud.get_data(url, self.headers, params, None, None)
+            response = airbud.get_data(url, self.headers, params=params)
             
             # Check for Rate Limiting or other errors
             if response.status_code != 200:
-                response = airbud.retry_get_data(url, self.headers, params, None, None)
+                response = airbud.retry_get_data(url, self.headers, params=params)
             if response.status_code == 200:
                 # Parse response for records and append to records list
                 response_json = response.json()
@@ -96,20 +97,20 @@ class GetRecharge(airbud.GetClient):
                 next_page = response_json.get("next_cursor")
                 if next_page:
                     # Only pass cursor as params
-                    log.debug(f"Fetching next page of data...{next_page}")
+                    log.info(f"Fetching next page of data...{next_page}")
                     params = {"cursor": next_page}
                 else:
-                    log.debug("No more data to fetch.")
+                    log.info("No more data to fetch.")
                     break
             else:
-                log.debug(f"Pagination halted due to status code: {response.status_code}")
+                log.info(f"Pagination halted due to status code: {response.status_code}")
                 break
             
         # Pass bookmark for next run
         if len(records) > 0:
             df = pd.DataFrame(records)
             if endpoint == "events":
-                df_max = df["created_at"].max()
+                df_max = df["created_at"].max() 
             else:
                 df_max = df["updated_at"].max()
             next_page = str(max(pd.to_datetime(df_max), stop_at))
@@ -122,38 +123,27 @@ class GetRecharge(airbud.GetClient):
         endpoint: str,  # API endpoint
         endpoint_kwargs: dict,  # Endpoint-specific arguments
         **kwargs
-    ) -> str:
-
-        # API Endpoint parameters
-        url = self.base_url + endpoint
+        ) -> str:
 
         # Get data
         log.info(f"Ingesting data from {endpoint} endpoint.")
-        records, next_page = self.paginate_responses(endpoint, endpoint_kwargs, url, **kwargs)
-        log.info(f"Completed data fetch for {endpoint}...")
+        records, next_page = self.paginate_responses(endpoint, endpoint_kwargs, **kwargs)
+        log.info(f"Completed data fetch for {endpoint}")
 
         # Store next page as XComs for downstream tasks
         task_instance = kwargs['task_instance']
-        task_instance.xcom_push(
-            key='next_page',
-            value=next_page
-        )
+        task_instance.xcom_push(key='next_page', value=next_page)
         log.info(f"Stored next page for {endpoint} in XComs: {next_page}")
 
         # Upload data to GCS
         if len(records) > 0:
             log.info(f"Uploading {len(records)} records to GCS...")
-            airbud.upload_json_to_gcs(
-                self.gcs_client,
-                self.bucket_name,
-                self.dataset,
-                endpoint,
-                records,
-                **kwargs 
-            )
+            filename = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
+            airbud.upload_json_to_gcs(self.gcs_bucket, filename, records, **kwargs)
             return "success"
-
         else:
+            # Store bookmark for next run
+            airbud.store_next_page_across_dags(self.dataset, endpoint, next_page)
             return f"No records to upload."
 
     def load_to_bq(
@@ -162,24 +152,20 @@ class GetRecharge(airbud.GetClient):
         endpoint_kwargs: dict,
         **kwargs  # Additional keyword arguments
         ) -> str:
-        # Check for records
+        # Check upstream task
         task_instance = kwargs['ti']
         upstream_task = f'get__{ endpoint }.ingest_{ endpoint }_data'
         return_value = task_instance.xcom_pull(task_ids=upstream_task, key='return_value')
+
         if return_value == "success":
-            # Get records from file or API
-            try:
-                records = airbud.get_records_from_file(
-                    self.gcs_client, 
-                    self.bucket_name, 
-                    self.dataset, 
-                    endpoint,
-                    **kwargs
-                )
-                log.debug(f"Successfully loaded {len(records)} records from GCS.")
+            try: # Get records from file or API
+                filename = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
+                records = airbud.get_records_from_file(self.gcs_bucket, filename)
+                log.info(f"Successfully loaded {len(records)} records from GCS.")
             except Exception as e:
                 raise Exception(f"Failed to get records from file or it doesn't exist: { e }")
             
+            # Get BigQuery table destination
             table_ref = self.bq_client.dataset(self.dataset).table(endpoint)
 
             # Insert rows into BigQuery in chunks
@@ -192,8 +178,9 @@ class GetRecharge(airbud.GetClient):
             upstream_task = f'get__{ endpoint }.ingest_{ endpoint }_data'
             next_page = task_instance.xcom_pull(task_ids=upstream_task, key='next_page')
 
+            # Store bookmark for next run
+            airbud.store_next_page_across_dags(self.dataset, endpoint, next_page)
+
         else:
-            log.info(f"Skipping { endpoint } BigQuery task...")
-        # Store bookmark for endpoint
-        airbud.store_next_page_across_dags(self.dataset, endpoint, next_page)
+            log.info("Do Nothing.")
 

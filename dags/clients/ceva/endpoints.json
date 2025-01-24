@@ -1,19 +1,19 @@
 {
 	"inventory_snapshot": {
-		"file_prefix": "Inventory_Transactions",
-		"bigquery_metadata": {
-			"partitioning_type": "DAY",
-			"partitioning_field": "source_synced_at",
-			"clustering_fields": ["from_date", "to_date", "site_id", "sku_id"]
-		}	
-	},
-
-	"inventory_transactions": {
 		"file_prefix": "Inventory_Snapshot",
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
 			"partitioning_field": "source_synced_at",
 			"clustering_fields": ["snapshot_date", "sku_id", "source_file_name"]
+		}	
+	},
+
+	"inventory_transactions": {
+		"file_prefix": "Inventory_Transactions",
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["from_date", "to_date", "sku_id", "source_file_name"]
 		}	
 	}
 }
