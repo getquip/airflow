@@ -1,5 +1,6 @@
 
 # Import Standard Libraries
+import os
 import json
 import time
 import logging
@@ -7,6 +8,9 @@ from typing import List, Dict
 
 # Import Third Party Libraries
 from google.cloud import bigquery
+
+# Custom Libraries
+from custom_packages.airbud.gcs import get_records_from_file, generate_json_blob_name
 
 # Initialize logger
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -70,7 +74,7 @@ def create_table_if_not_exists(
             client.create_table(table)
             log.info(f"{table_ref} created successfully.")   
         except Exception as e:
-            raise Exception(f"An error occurred while trying to create {table_ref}: {e}")
+            raise Exception(f"{e} An error occurred while trying to create {table_ref}: {e}")
 
 def insert_records_to_bq(
         client: object,  # BigQuery client object
@@ -81,7 +85,10 @@ def insert_records_to_bq(
     ) -> None:
     """Insert records into a BigQuery table in chunks."""
     total_records = len(records)
-    log.info(f"Starting data insertion for {total_records} records in chunks of {total_records if total_records < chunk_size else chunk_size}.")
+    log.info(f"""
+        Starting data insertion for {total_records} records in chunks of
+        {total_records if total_records < chunk_size else chunk_size}.
+        """)
 
     for i in range(0, total_records, chunk_size):
         chunk = records[i:i + chunk_size]
@@ -95,10 +102,11 @@ def insert_records_to_bq(
                     log.info(f"Successfully inserted chunk {i}-{i + len(chunk)}")
                     break  # Exit retry loop on success
             except Exception as e:
-                log.warninging(f"Attempt {attempt + 1} failed for chunk {i}-{i + len(chunk)}: {e}")
+                log.warning(f"Attempt {attempt + 1} failed for chunk {i}-{i + len(chunk)}: {e}")
                 if attempt == max_retries - 1:
                     log.error(f"Max retries reached for chunk {i}-{i + len(chunk)}. Failing.")
-                    raise RuntimeError(f"Unable to insert data after {max_retries} retries for chunk {i}-{i + len(chunk)}.")
+                    raise RuntimeError(
+                        f"""Unable to insert data after {max_retries} retries for chunk {i}-{i + len(chunk)}.""")
                 time.sleep(5)
 
     log.info(f"All {total_records} records inserted successfully into the table.")
@@ -118,12 +126,14 @@ def insert_files_to_bq(
         # Get file name
         local_file = os.path.basename(source_file)
         log.info(f"Processing {source_file}...")
-
-        try: # Get records from GCS
+        
+        # 1. Get records from GCS
+        try:
+            supplemental = local_file.split(".")[0]
             filename = generate_json_blob_name(
                 dataset, 
                 endpoint, 
-                supplemental=local_file, 
+                supplemental=supplemental, 
                 **kwargs
             )
             records = get_records_from_file(gcs_bucket, filename)
@@ -133,18 +143,19 @@ def insert_files_to_bq(
             bad_files.append(local_file)
             records = []
 
+        # 2. Insert the records to BigQuery
         if len(records) > 0:
-            try: # Upload records to BigQuery
+            try:
                 table_ref = bq_client.dataset(dataset).table(endpoint)
-
-                # Insert the records to BigQuery
+                
                 insert_records_to_bq(bq_client, table_ref, records)
                 log.info(f"Successfully uploaded {local_file} to BigQuery.")
                 files_to_move.append(source_file)
             except Exception as e:
                 log.error(f"Error uploading {local_file} to BigQuery: {e}")
                 bad_files.append(local_file)
-
+        
+        # 3. Check if there are any bad files
         if len(bad_files) > 0:
             log.error(f"Failed to process { len(bad_files) } files: {bad_files}")
         if len(files_to_move) > 0:

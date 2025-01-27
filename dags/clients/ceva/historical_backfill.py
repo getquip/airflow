@@ -12,11 +12,11 @@ log = logging.getLogger(__name__)
 client = storage.Client()
 gcs_bucket = client.get_bucket('quip_airflow_dev')
 
-files = airbud.list_all_files(gcs_bucket, 'get/ceva/inventory_snapshot/DAG_RUN:2025-01-22 17:46:35.465240+00:00')
+endpoint = 'inventory_transactions'
+files = airbud.list_all_files(gcs_bucket, f'get/ceva/{endpoint}/DAG_RUN:2025-01-27 18:15:55.637571+00:00')
 
 bq_client = bigquery.Client()
 dataset = 'ceva'
-endpoint = 'inventory_snapshot'
 table_ref = bq_client.dataset(dataset).table(endpoint)
 with open('clients/ceva/schemas/inventory_snapshot.json') as f:
     schema = json.load(f)
@@ -26,8 +26,11 @@ endpoint_kwargs = endpoints[endpoint]
 airbud.create_table_if_not_exists(bq_client,endpoint_kwargs,schema,table_ref)
 files_to_move = []
 bad_files = []
+
+
+
 # Process each file
-for source_file in files[0:]:
+for source_file in files:
     # Get file name
     local_file = os.path.basename(source_file)
     log.info(f"Processing {source_file}...")
@@ -38,6 +41,42 @@ for source_file in files[0:]:
         log.error(f"Failed to get records from file: {e}")
         bad_files.append(local_file)
         records = []
+        
+        
+    df = pd.DataFrame(records)
+    # clean json files
+    cleaned_columns = []
+    
+    for col in df.columns:
+        # Convert to lowercase
+        cleaned_col = col.lower()
+        # Replace spaces with underscores
+        cleaned_col = cleaned_col.replace(" ", "_")
+        # Replace '#' with 'number'
+        cleaned_col = cleaned_col.replace("#", "number")
+        # Replace '%' with 'percent'
+        cleaned_col = cleaned_col.replace("%", "percent")
+        # replace any quotes
+        cleaned_col = cleaned_col.replace('"', '')
+        cleaned_col = cleaned_col.replace("'", "")
+        # Replace special characters with underscores
+        cleaned_col = re.sub(r'[^a-zA-Z0-9]', '_', cleaned_col)
+        # rename source_file_name
+        if cleaned_col == 'source_filename':
+            cleaned_col = 'source_file_name'
+        # Append the cleaned column name to the list
+        cleaned_columns.append(cleaned_col)
+    
+    # Assign the cleaned column names back to the DataFrame
+    df.columns = cleaned_columns
+    
+    records = json.loads(df.to_json(orient='records', lines=False))
+    
+    # reupload the json file
+    blob = gcs_bucket.blob(source_file)
+    blob.upload_from_string(json.dumps(records), content_type='application/json')
+    log.info(f"Uploaded json data to GCS: {source_file}")
+    
     if len(records) > 0:
         try: # Upload records to BigQuery
             # Insert the records to BigQuery
@@ -47,6 +86,10 @@ for source_file in files[0:]:
         except Exception as e:
             log.error(f"Error uploading {local_file} to BigQuery: {e}")
             bad_files.append(local_file)
+
+
+
+
 
 ## rename blobs in gcs
 for blob_name in files:
@@ -65,3 +108,8 @@ for blob_name in files:
     # new_blob.rewrite(source_blob)
     # Delete the original blob
     source_blob.delete()
+
+for i, file in enumerate(files):
+    if 'Inventory_Transactions_05-20-2023-140030.json' in file:
+        print(i)
+

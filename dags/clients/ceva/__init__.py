@@ -22,7 +22,8 @@ class GetCeva(airbud.GetClient):
         self, 
         project_id: str, 
         bucket_name: str, 
-        aws_conn_id: str
+        aws_conn_id: str,
+        s3_bucket_name: str,
         ) -> None:
         # Define client's dataset name
         self.dataset = "ceva"
@@ -32,7 +33,7 @@ class GetCeva(airbud.GetClient):
 
         # Inititalize S3 connection
         self.s3_hook = S3Hook(aws_conn_id=aws_conn_id)
-        self.s3_bucket_name = "c5aa903e-2d4b-4853-b78c-af44763ec434"
+        self.s3_bucket_name = s3_bucket_name
         
         # Initialize BigQuery tables if they doesn't exist
         self.endpoints = self.load_endpoints(f"{ self.dataset }/endpoints.json")
@@ -66,25 +67,21 @@ class GetCeva(airbud.GetClient):
                     preserve_file_name=True
                 )
 
-                # Upload raw csv file to GCS
-                filename = airbud.upload_csv_to_gcs(self.gcs_bucket, gcs_path, local_file)
+                airbud.load_files_to_gcs(
+                    self.gcs_bucket,
+                    gcs_path,
+                    self.dataset,
+                    endpoint,
+                    local_file,
+                    **kwargs
+                    )
 
-                 # Get the GCS path for the file
-                gcs_filename, dag_run_date = airbud.generate_json_blob_name(
-                    self.dataset, endpoint, supplemental=filename, **kwargs)
-                
-                # Clean the column names and convert to JSON
-                records = airbud.clean_column_names(local_file, dag_run_date, gcs_filename)
-
-                # upload the cleaned records to GCS
-                
-                airbud.upload_json_to_gcs(self.gcs_bucket, gcs_filename, records, **kwargs)
-
-            # Push list of new GCS files to XCom
-            task_instance = kwargs['task_instance']
-            task_instance.xcom_push(key='s3_files', value=new_file_paths)
-            log.info(f"Stored file names for {endpoint} in XComs: {new_file_paths}")
-            return "success"
+        ##new_file_paths = airbud.list_all_files(self.gcs_bucket, f'get/ceva/{endpoint}/DAG_RUN:2025-01-23 19:16:08.922830+00:00')
+        # Push list of new GCS files to XCom
+        task_instance = kwargs['task_instance']
+        task_instance.xcom_push(key='s3_files', value=new_file_paths)
+        log.info(f"Stored file names for {endpoint} in XComs: {new_file_paths}")
+        return "success"
         # else:
         #     log.info(f"No new files found in bucket")
         #     return "no_new_files"
@@ -103,6 +100,7 @@ class GetCeva(airbud.GetClient):
         if return_value == "success":
             # Get the file names from XCom
             files = task_instance.xcom_pull(task_ids=upstream_task, key='s3_files')
+            files_to_move = task_instance.xcom_pull(task_ids=upstream_task, key='s3_files')
 
             files_to_move, bad_files = airbud.insert_files_to_bq(
                 files,
@@ -136,6 +134,7 @@ class GetCeva(airbud.GetClient):
             if len(files_to_move) > 0:
                 for source_file in files_to_move:
                     local_file = os.path.basename(source_file)
+                    local_file = local_file.replace('.json', '.csv') # delete this!
                     processed_path = f"processed/{endpoint}/{local_file}"
                     try:
                         airbud.move_files_on_s3(self.s3_hook, self.s3_bucket_name, local_file, processed_path)

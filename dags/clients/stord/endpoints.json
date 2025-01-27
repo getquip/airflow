@@ -1,19 +1,21 @@
 {
-	"fulfillment_invoices": {
-		"ignore": ["archive/do-not-load"],
+	"flat_fulfillment_invoices": {
+		"path": "billing",
+		"ignore": ["ignore"],
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
 			"partitioning_field": "source_synced_at",
-			"clustering_fields": ["invoice_number", "invoice_date", "shipment_type", "charge_code"]
+			"clustering_fields": ["invoice_number", "invoice_date", "source_file_name"]
 		}	
 	},
 
-	"pracel_invoices": {
-		"ignore": ["archive/do-not-load"],
+	"parcel_fulfillment_invoices": {
+		"path": "billing",
+		"ignore": ["ignore"],
 		"bigquery_metadata": {
 			"partitioning_type": "DAY",
 			"partitioning_field": "source_synced_at",
-			"clustering_fields": ["invoice_number", "invoice_date", "shipment_type", "charge_code"]
+			"clustering_fields": ["invoice_number", "invoice_date", "source_file_name"]
 		}	
 	}
 }

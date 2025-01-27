@@ -1,0 +1,162 @@
+[
+	{
+		"name": "client_name",         
+		"type": "STRING"
+	},
+	{
+		"name": "merchant_number",         
+		"type": "STRING"
+	},
+	{
+		"name": "invoice_date",            
+		"type": "STRING"
+	},
+	{
+		"name": "invoice_number",          
+		"type": "STRING"
+	},
+	{
+		"name": "po",                      
+		"type": "STRING"
+	},
+	{
+		"name": "manifest_id",             
+		"type": "STRING"
+	},
+	{
+		"name": "received_manifest_date",  
+		"type": "STRING"
+	},
+	{
+		"name": "shipment_received_date",  
+		"type": "STRING"
+	},
+	{
+		"name": "closed_manifest_date",    
+		"type": "STRING"
+	},
+	{
+		"name": "warehouse",               
+		"type": "STRING"
+	},
+	{
+		"name": "order_number",            
+		"type": "STRING"
+	},
+	{
+		"name": "trxn_date",               
+		"type": "STRING"
+	},
+	{
+		"name": "drop_ship_name",          
+		"type": "STRING"
+	},
+	{
+		"name": "shipment_id",             
+		"type": "STRING"
+	},
+	{
+		"name": "fulfillment_mode",        
+		"type": "STRING"
+	},
+	{
+		"name": "package_count",           
+		"type": "STRING"
+	},
+	{
+		"name": "ship_on_date",            
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_category",  
+		"type": "STRING"
+	},
+	{
+		"name": "transaction_num",        
+		"type": "STRING"
+	},
+	{
+		"name": "brand_name",              
+		"type": "STRING"
+	},
+	{
+		"name": "ngs_transaction_key",     
+		"type": "STRING"
+	},
+	{
+		"name": "total_amt",               
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_type_1",    
+		"type": "STRING"
+	},
+	{
+		"name": "fee_type_charges_1",      
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_type_2",    
+		"type": "STRING"
+	},
+	{
+		"name": "fee_type_charges_2",      
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_type_3",    
+		"type": "STRING"
+	},
+	{
+		"name": "fee_type_charges_3",     
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_type_4",    
+		"type": "STRING"
+	},
+	{
+		"name": "fee_type_charges_4",      
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_type_5",    
+		"type": "STRING"
+	},
+	{
+		"name": "fee_type_charges_5",      
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_type_6",    
+		"type": "STRING"
+	},
+	{
+		"name": "fee_type_charges_6",     
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_type_7",    
+		"type": "STRING"
+	},
+	{
+		"name": "fee_type_charges_7",      
+		"type": "STRING"
+	},
+	{
+		"name": "fee_surcharge_type_8",    
+		"type": "STRING"
+	},
+	{
+		"name": "fee_type_charges_8",
+		"type": "STRING"
+	},
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	},
+	{
+		"name": "source_file_name",
+		"type": "STRING"
+	}
+]

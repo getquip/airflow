@@ -10,6 +10,10 @@ from datetime import datetime
 from google.cloud import storage
 from airflow.models.dagrun import DagRun
 
+
+# Import Custom Libraries
+from custom_packages.airbud import file_storage
+
 # Initialize logger
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
@@ -19,7 +23,7 @@ def generate_json_blob_name(
         endpoint: str,
         supplemental: str = None,
         **kwargs
-    ) -> str:
+    ) -> (str, str):
     """Generate the destination blob name for a JSON file in GCS."""
     # Get DAG context
     dag_run: DagRun = kwargs.get('dag_run')
@@ -37,16 +41,9 @@ def generate_json_blob_name(
 def upload_json_to_gcs(
     bucket: object, # GCS bucket client object
     filename: str,
-    records: List[Dict],
-    **kwargs
+    records: List[Dict]
     ) -> None:
     """Upload JSON data to Google Cloud Storage (GCS)."""
-
-    # Store synced_at timestamp in the records
-    df = pd.DataFrame(records)
-    dag_run: DagRun = kwargs.get('dag_run')
-    df['source_synced_at'] = str(dag_run.execution_date)
-    records = json.loads(df.to_json(orient='records', lines=False))
 
     # Upload the JSON data as a string to GCS
     blob = bucket.blob(filename)
@@ -58,22 +55,19 @@ def get_records_from_file(
     filename: str
     ) -> List[Dict]:
     """Get JSON data from Google Cloud Storage (GCS)."""
-
-    # Generate the GCS file path
-    filename = generate_blob_name(dataset, endpoint, **kwargs)
-
+    
     # Download the JSON data as a string from GCS
     blob = bucket.blob(filename)
     log.debug(f"Downloading data from {filename}...")
     data = blob.download_as_string()
-
+    
     # Parse the JSON data
     try:
         json_data = data.decode("utf-8")
         records = json.loads(json_data)
     except Exception as e:
         raise Exception(f"Error parsing JSON data from GCS: {e}")
-        
+    
     return records
 
 def list_all_files(
@@ -81,26 +75,53 @@ def list_all_files(
     path: str,
     ) -> List[str]:
     """List all files in a Google Cloud Storage (GCS) bucket."""
-
+    
     # List all files in the GCS bucket under the given path
     blobs = bucket.list_blobs(prefix=path)
     files = sorted([blob.name for blob in blobs])
-
+    
     return files
 
 def upload_csv_to_gcs(
     bucket: object, # GCS bucket client object
     root_path: str,
-    local_file: str,
+    source_file: str,
     ) -> str:
     """Upload a CSV file to Google Cloud Storage (GCS)."""
 
-    filename = os.path.basename(local_file)
+    # Get the filename
+    filename = os.path.basename(source_file)
+    if '.csv.csv' in filename:
+        filename = filename.replace('.csv.csv', '.csv')
+
     # Set the GCS file path
     gcs_file_path = f"{root_path}/raw/{filename}"
 
     # Upload the file to GCS
     blob = bucket.blob(gcs_file_path)
-    blob.upload_from_filename(local_file)
+    blob.upload_from_filename(source_file)
     log.info(f"Uploaded to csv to GCS: {blob.name}")
-    return filename.replace(".csv", "")
+
+    filename_no_file_type = filename.replace('.csv', '')
+    return filename_no_file_type
+
+def load_files_to_gcs(
+    gcs_bucket: object, # GCS bucket client object
+    gcs_path: str, # GCS path
+    dataset: str, # Dataset name
+    endpoint: str, # Endpoint name
+    source_file:str, # source file path (from the remote server)
+    **kwargs
+    ):
+    # Upload raw csv file to GCS
+    filename_no_file_type = upload_csv_to_gcs(gcs_bucket, gcs_path, source_file)
+
+    # Generate the JSON blob name
+    json_filename, dag_run_date = generate_json_blob_name(
+        dataset, endpoint, supplemental=filename_no_file_type, **kwargs)
+    
+    # Clean the column names and convert to JSON
+    records = file_storage.clean_column_names(source_file, json_filename, dag_run_date)
+    
+    # Upload the JSON data to GCS
+    upload_json_to_gcs(gcs_bucket, json_filename, records)

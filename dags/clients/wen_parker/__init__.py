@@ -59,26 +59,18 @@ class GetWenParker(airbud.GetClient):
 
         if len(new_file_paths) > 0:
             log.info(f"Found {len(new_file_paths)} files in {sftp_path}")
-            
-            # Download the files from SFTP files
-            log.info(f"Downloading files from SFTP...")
-            airbud.download_sftp_files(self.sftp_conn_id, new_file_paths)
 
             # Process new files
             for source_file in new_file_paths:
-                local_file = os.path.basename(source_file)
                 log.info(f"Processing {source_file}...")
-                
-                # Upload raw csv file to GCS
-                local_file, dag_run_date = airbud.upload_csv_to_gcs(self.gcs_bucket, gcs_path, local_file)
-
-                # Clean the column names and convert to JSON
-                records = airbud.clean_column_names(local_file, dag_run_date)
-                
-                # upload the cleaned records to GCS
-                filename = airbud.generate_json_blob_name(
-                    self.dataset, endpoint, supplemental=local_file, **kwargs)
-                airbud.upload_json_to_gcs(self.gcs_bucket, filename, records, **kwargs)
+                airbud.load_files_to_gcs(
+                            self.gcs_bucket,
+                            gcs_path,
+                            self.dataset,
+                            endpoint,
+                            source_file,
+                            **kwargs
+                            )
 
             # Push list of new GCS files to XCom
             task_instance = kwargs['task_instance']
