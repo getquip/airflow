@@ -130,13 +130,13 @@ def insert_files_to_bq(
         # 1. Get records from GCS
         try:
             supplemental = local_file.split(".")[0]
-            filename = generate_json_blob_name(
+            filename, dag_run_date = generate_json_blob_name(
                 dataset, 
                 endpoint, 
                 supplemental=supplemental, 
                 **kwargs
             )
-            records = get_records_from_file(gcs_bucket, filename)
+            records  = get_records_from_file(gcs_bucket, filename)
             log.info(f"Successfully loaded {len(records)} records from GCS.")
         except Exception as e:
             log.error(f"Failed to get records from file: {e}")
@@ -155,9 +155,11 @@ def insert_files_to_bq(
                 log.error(f"Error uploading {local_file} to BigQuery: {e}")
                 bad_files.append(local_file)
         
-        # 3. Check if there are any bad files
-        if len(bad_files) > 0:
-            log.error(f"Failed to process { len(bad_files) } files: {bad_files}")
-        if len(files_to_move) > 0:
-            log.info(f"Successfully uploaded { len(files_to_move) } files to BigQuery.")
-        return files_to_move, bad_files
+    # 3. Check if there are any bad files
+    if len(bad_files) > 0:
+        log.error(f"Failed to process { len(bad_files) } files: {bad_files}")
+    if len(files_to_move) > 0:
+        log.info(f"Successfully uploaded { len(files_to_move) } files to BigQuery.")
+    if len(files_to_move) == 0 and len(files) > 0:
+        raise Exception(f"None of the {len(files)} files downloaded were successfully processed.")
+    return files_to_move, bad_files

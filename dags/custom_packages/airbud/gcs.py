@@ -55,9 +55,12 @@ def get_records_from_file(
     filename: str
     ) -> List[Dict]:
     """Get JSON data from Google Cloud Storage (GCS)."""
-    
-    # Download the JSON data as a string from GCS
-    blob = bucket.blob(filename)
+    try:
+        blob = bucket.blob(filename)
+    except Exception as e:
+        log.warning("Error getting blob. Trying again...")
+        blob = bucket.get_blob(filename)
+
     log.debug(f"Downloading data from {filename}...")
     data = blob.download_as_string()
     
@@ -79,7 +82,7 @@ def list_all_files(
     # List all files in the GCS bucket under the given path
     blobs = bucket.list_blobs(prefix=path)
     files = sorted([blob.name for blob in blobs])
-    
+
     return files
 
 def upload_csv_to_gcs(

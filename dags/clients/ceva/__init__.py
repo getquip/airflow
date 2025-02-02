@@ -52,8 +52,9 @@ class GetCeva(airbud.GetClient):
         gcs_path = f"get/{self.dataset}/{endpoint}"
         file_prefix = endpoint_kwargs.get("file_prefix", "")
 
-        # Get list of unprocessed file paths from the S3
-        new_file_paths = self.s3_hook.list_keys(bucket_name=self.s3_bucket_name, prefix=file_prefix)
+        # Get list of unprocessed csv file paths from the S3
+        all_files = self.s3_hook.list_keys(bucket_name=self.s3_bucket_name, prefix=file_prefix)
+        new_file_paths = [file for file in all_files if file.endswith('.csv')]
         
         if len(new_file_paths) > 0:
             log.info(f"Found {len(new_file_paths)} files to process.")
@@ -76,15 +77,14 @@ class GetCeva(airbud.GetClient):
                     **kwargs
                     )
 
-        ##new_file_paths = airbud.list_all_files(self.gcs_bucket, f'get/ceva/{endpoint}/DAG_RUN:2025-01-23 19:16:08.922830+00:00')
-        # Push list of new GCS files to XCom
-        task_instance = kwargs['task_instance']
-        task_instance.xcom_push(key='s3_files', value=new_file_paths)
-        log.info(f"Stored file names for {endpoint} in XComs: {new_file_paths}")
-        return "success"
-        # else:
-        #     log.info(f"No new files found in bucket")
-        #     return "no_new_files"
+            # Push list of new GCS files to XCom
+            task_instance = kwargs['task_instance']
+            task_instance.xcom_push(key='s3_files', value=new_file_paths)
+            log.info(f"Stored file names for {endpoint} in XComs: {new_file_paths}")
+            return "success"
+        else:
+            log.info(f"No new files found in bucket")
+            return "no_new_files"
 
     def load_to_bq(
         self,
@@ -100,7 +100,6 @@ class GetCeva(airbud.GetClient):
         if return_value == "success":
             # Get the file names from XCom
             files = task_instance.xcom_pull(task_ids=upstream_task, key='s3_files')
-            files_to_move = task_instance.xcom_pull(task_ids=upstream_task, key='s3_files')
 
             files_to_move, bad_files = airbud.insert_files_to_bq(
                 files,
@@ -134,7 +133,6 @@ class GetCeva(airbud.GetClient):
             if len(files_to_move) > 0:
                 for source_file in files_to_move:
                     local_file = os.path.basename(source_file)
-                    local_file = local_file.replace('.json', '.csv') # delete this!
                     processed_path = f"processed/{endpoint}/{local_file}"
                     try:
                         airbud.move_files_on_s3(self.s3_hook, self.s3_bucket_name, local_file, processed_path)

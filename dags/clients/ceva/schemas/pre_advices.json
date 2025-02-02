@@ -1,0 +1,82 @@
+[
+	{ 
+		"name": "from_date",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "to_date",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "pre_advice_id",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "po_number",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "status",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "tracking_num",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "actual_dstamp",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "finish_dstamp",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "sku_id",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "description",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "qty_due",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "qty_rec",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "remaining",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "total_pa_qty_due",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "notes",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "ta_time_hrs",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "qty_rec_cs",
+	 	"type": "STRING" 
+	},
+	{ 
+		"name": "qty_rec_pl",
+	 	"type": "STRING" 
+	},
+	{
+		"name": "source_file_name",
+		"type": "STRING"
+	},
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	}
+  ]

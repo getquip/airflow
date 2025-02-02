@@ -11,10 +11,10 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %
 log = logging.getLogger(__name__)
 
 # SFTP server details
-hostname = 'ftp.ful.stord.com'
+hostname = 'test'
 port = 22
-username = 'Quip'
-password = "Rn.ieVq252"
+username = 'test'
+password = 'test'
 
 # Create an SSH client
 ssh = paramiko.SSHClient()

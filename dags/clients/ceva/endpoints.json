@@ -15,5 +15,14 @@
 			"partitioning_field": "source_synced_at",
 			"clustering_fields": ["from_date", "to_date", "sku_id", "source_file_name"]
 		}	
+	},
+
+	"pre_advices": {
+		"file_prefix": "Pre_Advices",
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["from_date", "to_date", "sku_id", "status"]
+		}	
 	}
 }
