@@ -62,13 +62,14 @@ class GetWenParker(airbud.GetClient):
 
             # Process new files
             for source_file in new_file_paths:
+                filename = airbud.download_sftp_file(self.sftp_conn_id, source_file)
                 log.info(f"Processing {source_file}...")
                 airbud.load_files_to_gcs(
                             self.gcs_bucket,
                             gcs_path,
                             self.dataset,
                             endpoint,
-                            source_file,
+                            filename,
                             **kwargs
                             )
 
@@ -98,7 +99,7 @@ class GetWenParker(airbud.GetClient):
             sftp_files = task_instance.xcom_pull(task_ids=upstream_task, key='sftp_files')
 
             files_to_move, bad_files = airbud.insert_files_to_bq(
-                files,
+                sftp_files,
                 endpoint,
                 self.dataset,
                 self.bq_client,

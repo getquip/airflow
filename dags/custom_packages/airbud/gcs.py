@@ -45,6 +45,7 @@ def upload_json_to_gcs(
     ) -> None:
     """Upload JSON data to Google Cloud Storage (GCS)."""
 
+    log.info(f"Uploading json data to GCS...")
     # Upload the JSON data as a string to GCS
     blob = bucket.blob(filename)
     blob.upload_from_string(json.dumps(records), content_type='application/json')
@@ -92,6 +93,7 @@ def upload_csv_to_gcs(
     ) -> str:
     """Upload a CSV file to Google Cloud Storage (GCS)."""
 
+    log.info(f"Uploading to csv to GCS...")
     # Get the filename
     filename = os.path.basename(source_file)
     if '.csv.csv' in filename:
