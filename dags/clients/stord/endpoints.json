@@ -1,0 +1,21 @@
+{
+	"flat_fulfillment_invoices": {
+		"path": "billing",
+		"ignore": ["ignore"],
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["invoice_number", "invoice_date", "source_file_name"]
+		}	
+	},
+
+	"parcel_fulfillment_invoices": {
+		"path": "billing",
+		"ignore": ["ignore"],
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["invoice_number", "invoice_date", "source_file_name"]
+		}	
+	}
+}

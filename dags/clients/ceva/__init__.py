@@ -22,7 +22,8 @@ class GetCeva(airbud.GetClient):
         self, 
         project_id: str, 
         bucket_name: str, 
-        aws_conn_id: str
+        aws_conn_id: str,
+        s3_bucket_name: str,
         ) -> None:
         # Define client's dataset name
         self.dataset = "ceva"
@@ -32,7 +33,7 @@ class GetCeva(airbud.GetClient):
 
         # Inititalize S3 connection
         self.s3_hook = S3Hook(aws_conn_id=aws_conn_id)
-        self.s3_bucket_name = "c5aa903e-2d4b-4853-b78c-af44763ec434"
+        self.s3_bucket_name = s3_bucket_name
         
         # Initialize BigQuery tables if they doesn't exist
         self.endpoints = self.load_endpoints(f"{ self.dataset }/endpoints.json")
@@ -51,8 +52,9 @@ class GetCeva(airbud.GetClient):
         gcs_path = f"get/{self.dataset}/{endpoint}"
         file_prefix = endpoint_kwargs.get("file_prefix", "")
 
-        # Get list of unprocessed file paths from the S3
-        new_file_paths = self.s3_hook.list_keys(bucket_name=self.s3_bucket_name, prefix=file_prefix)
+        # Get list of unprocessed csv file paths from the S3
+        all_files = self.s3_hook.list_keys(bucket_name=self.s3_bucket_name, prefix=file_prefix)
+        new_file_paths = [file for file in all_files if file.endswith('.csv')]
         
         if len(new_file_paths) > 0:
             log.info(f"Found {len(new_file_paths)} files to process.")
@@ -66,28 +68,23 @@ class GetCeva(airbud.GetClient):
                     preserve_file_name=True
                 )
 
-                # Upload raw csv file to GCS
-                filename = airbud.upload_csv_to_gcs(self.gcs_bucket, gcs_path, local_file)
-
-                 # Get the GCS path for the file
-                gcs_filename, dag_run_date = airbud.generate_json_blob_name(
-                    self.dataset, endpoint, supplemental=filename, **kwargs)
-                
-                # Clean the column names and convert to JSON
-                records = airbud.clean_column_names(local_file, dag_run_date, gcs_filename)
-
-                # upload the cleaned records to GCS
-                
-                airbud.upload_json_to_gcs(self.gcs_bucket, gcs_filename, records, **kwargs)
+                airbud.load_files_to_gcs(
+                    self.gcs_bucket,
+                    gcs_path,
+                    self.dataset,
+                    endpoint,
+                    local_file,
+                    **kwargs
+                    )
 
             # Push list of new GCS files to XCom
             task_instance = kwargs['task_instance']
             task_instance.xcom_push(key='s3_files', value=new_file_paths)
             log.info(f"Stored file names for {endpoint} in XComs: {new_file_paths}")
             return "success"
-        # else:
-        #     log.info(f"No new files found in bucket")
-        #     return "no_new_files"
+        else:
+            log.info(f"No new files found in bucket")
+            return "no_new_files"
 
     def load_to_bq(
         self,

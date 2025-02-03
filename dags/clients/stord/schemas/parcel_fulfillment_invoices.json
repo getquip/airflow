@@ -1,0 +1,238 @@
+[	
+	{ 
+		"name": "total_amt",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_1",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_1",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_2",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_2",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_3",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_3",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_4",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_4",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_5",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_5",
+		"type": "STRING"
+	},
+	{ 
+		"name": "merchant_name",
+		"type": "STRING"
+	},
+	{ 
+		"name": "merchant_number",
+		"type": "STRING"
+	},
+	{ 
+		"name": "invoice_date",
+		"type": "STRING"
+	},
+	{ 
+		"name": "invoice_number",
+		"type": "STRING"
+	},
+	{ 
+		"name": "warehouse_name",
+		"type": "STRING"
+	},
+	{ 
+		"name": "order_number",
+		"type": "STRING"
+	},
+	{ 
+		"name": "order_date",
+		"type": "STRING"
+	},
+	{ 
+		"name": "drop_ship_name",
+		"type": "STRING"
+	},
+	{ 
+		"name": "shipment_id",
+		"type": "STRING"
+	},
+	{ 
+		"name": "no__of_pkgs",
+		"type": "STRING"
+	},
+	{ 
+		"name": "received_date",
+		"type": "STRING"
+	},
+	{ 
+		"name": "tracking_number",
+		"type": "STRING"
+	},
+	{ 
+		"name": "pkg_reference",
+		"type": "STRING"
+	},
+	{ 
+		"name": "dim_weight",
+		"type": "STRING"
+	},
+	{ 
+		"name": "weight",
+		"type": "STRING"
+	},
+	{ 
+		"name": "height",
+		"type": "STRING"
+	},
+	{ 
+		"name": "width",
+		"type": "STRING"
+	},
+	{ 
+		"name": "length",
+		"type": "STRING"
+	},
+	{ 
+		"name": "no__of_pieces",
+		"type": "STRING"
+	},
+	{ 
+		"name": "contents__sku_qty_sku_qty_",
+		"type": "STRING"
+	},
+	{ 
+		"name": "company",
+		"type": "STRING"
+	},
+	{ 
+		"name": "address_1",
+		"type": "STRING"
+	},
+	{ 
+		"name": "address_2",
+		"type": "STRING"
+	},
+	{ 
+		"name": "city",
+		"type": "STRING"
+	},
+	{ 
+		"name": "state",
+		"type": "STRING"
+	},
+	{ 
+		"name": "postal_code",
+		"type": "STRING"
+	},
+	{ 
+		"name": "country",
+		"type": "STRING"
+	},
+	{ 
+		"name": "ship_from_zip",
+		"type": "STRING"
+	},
+	{ 
+		"name": "zone",
+		"type": "STRING"
+	},
+	{ 
+		"name": "carrier",
+		"type": "STRING"
+	},
+	{ 
+		"name": "class_of_service",
+		"type": "STRING"
+	},
+	{ 
+		"name": "transmitted_shipping_method",
+		"type": "STRING"
+	},
+	{ 
+		"name": "actual_shipping_method",
+		"type": "STRING"
+	},
+	{ 
+		"name": "shipped_date",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_category",
+		"type": "STRING"
+	},
+	{ 
+		"name": "ngs_postage_key",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_6",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_6",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_7",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_7",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_8",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_8",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_9",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_type_charges_9",
+		"type": "STRING"
+	},
+	{ 
+		"name": "fee_surcharge_type_10",
+		"type": "STRING"
+	},
+	{ 
+			"name": "fee_type_charges_10",
+			"type": "STRING"
+	},
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	},
+	{
+		"name": "source_file_name",
+		"type": "STRING"
+	}
+]

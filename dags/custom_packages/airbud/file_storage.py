@@ -1,11 +1,13 @@
 # Import Standard Libraries
 import os
+import re
 import csv
 import stat
 import json
 import time
 import logging
 import pandas as pd
+from zipfile import ZipFile
 from typing import List, Dict
 
 # Import Third Party Libraries
@@ -17,81 +19,84 @@ logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-def load_csv_to_df(local_file: str) -> pd.DataFrame:
+def load_csv_to_df(csv_file: str) -> pd.DataFrame:
     try:
         # Initialize an empty list to store chunks
         all_chunks = []
-
+        
         # Loop through the file in chunks
         for chunk in pd.read_csv(
-            local_file, 
+            csv_file, 
             chunksize=10000, 
             on_bad_lines='skip', 
-            low_memory=False,
-            quoting=csv.QUOTE_NONE,
+            low_memory=True,
             delimiter=','):
-            print(f"Processing chunk with {len(chunk)} rows...")
+            print(f"Processing csv chunk with {len(chunk)} rows...")
             # Append the chunk to the list
             all_chunks.append(chunk)
-
+        
         # Concatenate all chunks into a single DataFrame
         full_df = pd.concat(all_chunks, ignore_index=True)
         print(f"Total rows in the DataFrame: {len(full_df)}")
-
+        
         return full_df  # Return the combined DataFrame
-
+        
     except Exception as e:
         print(f"Error reading the file: {e}")
-        return None
+        return []
 
 def clean_column_names(
-    local_file: str, # Path to the CSV file
+    csv_file: str, # local path to the CSV file
+    json_file_path: str, # Name of the csv GCS file
     dag_run_date: str, # Date of the DAG run
-    gcs_filename: str, # Name of the GCS file
     ) -> List[Dict]: # Returns csv as json records
     """Clean column names and convert CSV to JSON records."""
     
     # Read the CSV file into a DataFrame in chunks
-    df = load_csv_to_df(local_file)
-
-    # Get the original column names from the first row
-    cleaned_columns = []
-    
-    for col in df.columns:
-        # Convert to lowercase
-        cleaned_col = col.lower()
-        # Replace spaces with underscores
-        cleaned_col = cleaned_col.replace(" ", "_")
-        # Replace '#' with 'number'
-        cleaned_col = cleaned_col.replace("#", "number")
-        # Replace '%' with 'percent'
-        cleaned_col = cleaned_col.replace("%", "percent")
-        # replace any quotes
-        cleaned_col = cleaned_col.replace('"', '')
-        cleaned_col = cleaned_col.replace("'", "")
-        # Append the cleaned column name to the list
-        cleaned_columns.append(cleaned_col)
+    df = load_csv_to_df(csv_file)
+    if len(df) > 0:
+        # Get the original column names from the first row
+        cleaned_columns = []
         
-    # Assign the cleaned column names back to the DataFrame
-    df.columns = cleaned_columns
-
-    # Store synced_at timestamp in the records
-    df['source_synced_at'] = str(dag_run_date)
-
-    # Store file name in the records
-    df['source_file_name'] = gcs_filename
-
-    # Convert the DataFrame to a list of dictionaries
-    records = json.loads(df.to_json(orient='records', lines=False))
-    log.info(f"Converted {len(records)} rows to JSON records")
-    return records
+        for col in df.columns:
+            # Convert to lowercase
+            cleaned_col = col.lower()
+            # Replace spaces with underscores
+            cleaned_col = cleaned_col.replace(" ", "_")
+            # Replace '#' with 'number'
+            cleaned_col = cleaned_col.replace("#", "number")
+            # Replace '%' with 'percent'
+            cleaned_col = cleaned_col.replace("%", "percent")
+            # replace any quotes
+            cleaned_col = cleaned_col.replace('"', '')
+            cleaned_col = cleaned_col.replace("'", "")
+            # Replace special characters with underscores
+            cleaned_col = re.sub(r'[^a-zA-Z0-9]', '_', cleaned_col)
+            # Append the cleaned column name to the list
+            cleaned_columns.append(cleaned_col)
+            
+        # Assign the cleaned column names back to the DataFrame
+        df.columns = cleaned_columns
+        
+        # Store synced_at timestamp in the records
+        df['source_synced_at'] = dag_run_date
+        
+        # Store file name in the records
+        df['source_file_name'] = json_file_path
+        
+        # Convert the DataFrame to a list of dictionaries
+        records = json.loads(df.to_json(orient='records', lines=False))
+        log.debug(f"Converted {len(records)} rows to JSON records")
+        
+        return records
+    else:
+        return []
 
 def list_sftp_files(
     sftp_conn_id: str,  # SFTP connection ID
     remote_path: str,  # Remote directory path
     endpoint_kwargs: dict,  # Get files to ignore
-    ) -> List[str]:  # Returns list of file paths
-    """List unprocessed files in a remote SFTP directory."""
+) -> List[str]:  # Returns list of file paths
     # Get files to ignore
     ignore_files = endpoint_kwargs.get("ignore", [])
 
@@ -102,11 +107,12 @@ def list_sftp_files(
     def get_files_recursively(sftp, path, files):
         for item in sftp.listdir_attr(path):
             item_path = os.path.join(path, item.filename)
-            
+
             # Skip the "processed" folder directly under remote_path
             if item.filename == "processed" and path == remote_path:
                 continue
 
+            # Skip files that match the ignore list
             if any(ignore == item_path or ignore in item_path for ignore in ignore_files):
                 log.info(f"Skipping {item_path}")
                 continue
@@ -117,45 +123,36 @@ def list_sftp_files(
             else:
                 files.append(item_path)
 
-    # Assuming the function has logic to connect to the SFTP server and list files
+    # List files in the remote directory
     files = []
     with sftp_hook.get_conn() as sftp:
-        get_files_recursively(sftp, remote_path, files)
-    
-    return files
-
-
-    # Connect to SFTP server
-    sftp_hook = SFTPHook(sftp_conn_id)
-    with sftp_hook.get_conn() as sftp:
-        files = []
         get_files_recursively(sftp, remote_path, files)
 
     # Sort the files list before returning
     return sorted(files)
 
 
-def download_sftp_files(
+def download_sftp_file(
     sftp_conn_id: str, # SFTP connection ID
-    files: List[str] # List of file paths
-    ) -> None: # Returns list of downloaded file names (without original path)
+    source_file: str # file path
+    ) -> str: # Returns list of downloaded file names (without original path)
     """Download files from a remote SFTP server."""
 
     # Connect to SFTP server
     sftp_hook = SFTPHook(sftp_conn_id)
 
     with sftp_hook.get_conn() as sftp:
-        for source_file in files:
-            try:
-                # Extract the file name for env path
-                file_name = os.path.basename(source_file)
-                # Download the file to the current working directory without the source path
-                sftp.get(source_file, file_name)
-                print(f"Downloaded: {file_name}")
-            except FileNotFoundError:
-                raise FileNotFoundError(f"File not found on SFTP server: {file_name}")
-            except Exception as e:
-                raise Exception(f"Error downloading {file_name}: {e}")
+        try:
+            # Extract the file name for env path
+            filename = os.path.basename(source_file)
+            # Download the file to the current working directory without the source path
+            sftp.get(source_file, filename)
+            print(f"Downloaded: {filename}")
+            return filename
+        except FileNotFoundError:
+            raise FileNotFoundError(f"File not found on SFTP server: {filename}")
+        except Exception as e:
+            raise Exception(f"Error downloading {filename}: {e}")
 
 def move_file_on_sftp(
     sftp_conn_id: str,  # SFTP connection ID
@@ -169,8 +166,8 @@ def move_file_on_sftp(
     sftp_hook = SFTPHook(sftp_conn_id)
 
     # Set the destination directory and path
-    file_name = os.path.basename(source_file)
-    destination_path = os.path.join(processed_path, file_name)
+    filename = os.path.basename(source_file)
+    destination_path = os.path.join(processed_path, filename)
 
     for attempt in range(1, max_retries + 1):
         try:
@@ -216,3 +213,44 @@ def move_files_on_s3(
         log.info(f"Successfully moved {source_file} to {destination_file}.")
     else:
         log.warn(f"Failed to copy {source_file} to {destination_file}.")
+
+def unzip_files(zip_file_path):
+    try:
+        extracted_files = []
+        
+        # Open the ZIP file
+        with ZipFile(zip_file_path) as zf:
+            # List all files in the ZIP
+            filenames = zf.namelist()
+            
+            if not filenames:
+                raise ValueError("The ZIP file is empty.")
+            
+            # Find all CSV files in the ZIP
+            csv_files = [f for f in filenames if f.endswith('.csv')]
+            
+            if not csv_files:
+                raise ValueError("No CSV files found in the ZIP.")
+            
+            # Extract and save each CSV file
+            for file in csv_files:
+                with zf.open(file) as csv_file:
+                    # Create a local path for the file
+                    csv_path = os.path.basename(file)
+                    
+                    # Write the file to the current directory
+                    with open(csv_path, 'wb') as output_file:
+                        output_file.write(csv_file.read())
+                    
+                    # Log and store the saved file path
+                    log.info(f"CSV saved to {csv_path}")
+                    extracted_files.append(csv_path)
+        
+        return extracted_files
+    
+    except FileNotFoundError:
+        raise FileNotFoundError(f"The file '{zip_file_path}' does not exist.")
+    except ValueError as ve:
+        raise ve
+    except Exception as e:
+        raise Exception(f"An error occurred: {e}")

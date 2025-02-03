@@ -18,8 +18,9 @@ from custom_packages.notifications import send_slack_alert
 # Define constants for data source
 PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
 GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
+S3_BUCKET = Variable.get("ceva__s3_bucket", '')
 AWS_CONN_ID = "aws_default"
-CLIENT = GetCeva(PROJECT_ID, GCS_BUCKET, AWS_CONN_ID)
+CLIENT = GetCeva(PROJECT_ID, GCS_BUCKET, AWS_CONN_ID, S3_BUCKET)
 
 
 # Define default arguments for the DAG
@@ -73,7 +74,7 @@ with DAG(
                 python_callable=CLIENT.move_to_processed,
                 op_kwargs={"endpoint": endpoint},
                 dag=dag,
-                   trigger_rule="all_success", # Only run if all tasks are successful
+                trigger_rule="all_success", # Only run if all tasks are successful
             )
 
             ingestion_task >> load_to_bq_task >> move_to_processed_task
