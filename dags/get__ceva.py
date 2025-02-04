@@ -37,7 +37,7 @@ with DAG(
     dag_id="get__ceva",
     default_args=default_args,
     description="A DAG to sync files from an S3 bucket withing Quip's domain.",
-    schedule_interval="0 12 * * *", # Daily @ 7:00 AM EST
+    schedule_interval="0 */3 * * *", # Every 3 hours
     start_date=datetime(2025, 1, 1),
     catchup=False,
     on_success_callback=cleanup_xcom,
