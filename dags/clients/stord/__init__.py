@@ -159,5 +159,5 @@ class GetStord(airbud.GetClient):
             # raise error if there are any bad files
             if len(bad_files) > 0:
                 raise Exception(f"Failed to fully process { len(bad_files) } files: {bad_files}")
-    return "success"
+        return "success"
         
