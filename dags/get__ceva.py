@@ -18,9 +18,8 @@ from custom_packages.notifications import send_slack_alert
 # Define constants for data source
 PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
 GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
-S3_BUCKET = Variable.get("ceva__s3_bucket", '')
 AWS_CONN_ID = "aws_default"
-CLIENT = GetCeva(PROJECT_ID, GCS_BUCKET, AWS_CONN_ID, S3_BUCKET)
+CLIENT = GetCeva(PROJECT_ID, GCS_BUCKET, AWS_CONN_ID)
 
 
 # Define default arguments for the DAG
@@ -37,7 +36,7 @@ with DAG(
     dag_id="get__ceva",
     default_args=default_args,
     description="A DAG to sync files from an S3 bucket withing Quip's domain.",
-    schedule_interval="0 */3 * * *", # Every 3 hours
+    schedule_interval="0 */5 * * *", # Every 5 hours
     start_date=datetime(2025, 1, 1),
     catchup=False,
     on_success_callback=cleanup_xcom,
