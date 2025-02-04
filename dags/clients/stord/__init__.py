@@ -8,7 +8,6 @@ from typing import List, Dict
 
 # Third-party package imports
 from airflow.models import TaskInstance
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 # Local package imports
 from custom_packages import airbud
@@ -16,31 +15,32 @@ from custom_packages import airbud
 # Initialize logger
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
-class GetCeva(airbud.GetClient):
+class GetStord(airbud.GetClient):
+
+    """Initialize the GetStord class."""
     def __init__(
         self, 
         project_id: str, 
         bucket_name: str, 
-        aws_conn_id: str,
+        sftp_conn_id: str
         ) -> None:
         # Define client's dataset name
-        self.dataset = "ceva"
+        self.dataset = "stord"
 
-       # Initialize the parent class
+        # Initialize the parent class
         super().__init__(project_id, bucket_name, self.dataset) 
 
-        # Inititalize S3 connection
-        self.s3_hook = S3Hook(aws_conn_id=aws_conn_id)
-        self.s3_bucket_name = 'c5aa903e-2d4b-4853-b78c-af44763ec434'
+        # Define the parent path
+        self.sftp_conn_id = sftp_conn_id
         
         # Initialize BigQuery tables if they doesn't exist
         self.endpoints = self.load_endpoints(f"{ self.dataset }/endpoints.json")
         self.schemas = self.load_endpoint_schemas(self.dataset, self.endpoints.keys())
         self.generate_bq_tables()
 
-        log.info(f"Initialized GetCeva Client.")
-
+    """Get files from SFTP, clean, and upload to GCS."""
     def get_files(
         self,
         endpoint: str,
@@ -48,43 +48,56 @@ class GetCeva(airbud.GetClient):
         **kwargs
         )-> str:
         # Initialize paths
+        path = endpoint_kwargs.get('path')
+        sftp_path = f"{path}/{endpoint}"
         gcs_path = f"get/{self.dataset}/{endpoint}"
-        file_prefix = endpoint_kwargs.get("file_prefix", "")
 
-        # Get list of unprocessed csv file paths from the S3
-        all_files = self.s3_hook.list_keys(bucket_name=self.s3_bucket_name, prefix=file_prefix)
-        new_file_paths = [file for file in all_files if file.endswith('.csv')]
-        
-        if len(new_file_paths) > 0:
-            log.info(f"Found {len(new_file_paths)} files to process.")
+        # Get list of unprocessed file paths from the SFTP
+        remote_files = airbud.list_sftp_files(self.sftp_conn_id, sftp_path, endpoint_kwargs)
 
-            for source_file in new_file_paths:
+        if len(remote_files) > 0:
+            log.info(f"Found {len(remote_files)} files in {sftp_path}")
                 
-                # Download file using S3Hook
-                local_file = self.s3_hook.download_file(
-                    key=source_file,
-                    bucket_name=self.s3_bucket_name,
-                    preserve_file_name=True
-                )
+            # Process new files
+            for source_file in remote_files:
+                log.info(f"Processing {source_file}...")
 
-                airbud.load_files_to_gcs(
-                    self.gcs_bucket,
-                    gcs_path,
-                    self.dataset,
-                    endpoint,
-                    local_file,
-                    **kwargs
-                    )
+                # Download the files from SFTP files
+                local_file = airbud.download_sftp_file(self.sftp_conn_id, source_file)
 
+                # open any zipped files
+                if local_file.endswith('.zip'):
+                    log.info("Unzipping file...")
+                    csv_files = airbud.unzip_files(local_file)
+                    log.info(f"Found {len(csv_files)} csv files in the zip file.")
+                    for csv_file in csv_files:
+                        airbud.load_files_to_gcs(
+                            self.gcs_bucket,
+                            gcs_path,
+                            self.dataset,
+                            endpoint,
+                            csv_file,
+                            **kwargs
+                            )
+                else:
+                    airbud.load_files_to_gcs(
+                            self.gcs_bucket,
+                            gcs_path,
+                            self.dataset,
+                            endpoint,
+                            local_file,
+                            **kwargs
+                            )
             # Push list of new GCS files to XCom
             task_instance = kwargs['task_instance']
-            task_instance.xcom_push(key='s3_files', value=new_file_paths)
-            log.info(f"Stored file names for {endpoint} in XComs: {new_file_paths}")
+            task_instance.xcom_push(key='sftp_files', value=remote_files)
+            log.info(f"Stored file names for {endpoint} in XComs: {remote_files}")
             return "success"
         else:
-            log.info(f"No new files found in bucket")
+            log.info(f"No new files found in {sftp_path}")
             return "no_new_files"
 
+    """Load files from GCS to BigQuery."""
     def load_to_bq(
         self,
         endpoint: str,
@@ -95,31 +108,32 @@ class GetCeva(airbud.GetClient):
         task_instance = kwargs['ti']
         upstream_task = f'get__{ endpoint }.ingest_{ endpoint }_files'
         return_value = task_instance.xcom_pull(task_ids=upstream_task, key='return_value')
-        
+        print(return_value)
         if return_value == "success":
             # Get the file names from XCom
-            files = task_instance.xcom_pull(task_ids=upstream_task, key='s3_files')
+            sftp_files = task_instance.xcom_pull(task_ids=upstream_task, key='sftp_files')
 
             files_to_move, bad_files = airbud.insert_files_to_bq(
-                files,
+                sftp_files,
                 endpoint,
                 self.dataset,
                 self.bq_client,
                 self.gcs_bucket,
                 **kwargs
                 )
-
+            
             # Push list of new GCS files to XCom
             task_instance = kwargs['task_instance']
             task_instance.xcom_push(key='files_to_move', value=files_to_move)
-            task_instance.xcom_push(key='bad_files', value=[])
+            task_instance.xcom_push(key='bad_files', value=bad_files)
         else:
             log.info("Do Nothing.")
 
-        """Move files in SFTP to processed folder."""
+    """Move files in SFTP to processed folder."""
     def move_to_processed(
         self,
         endpoint: str,
+        endpoint_kwargs:str,
         **kwargs
         ) -> str:
         # Check upstream task
@@ -128,21 +142,22 @@ class GetCeva(airbud.GetClient):
         files_to_move = task_instance.xcom_pull(task_ids=upstream_task, key='files_to_move')
         bad_files = task_instance.xcom_pull(task_ids=upstream_task, key='bad_files')
 
-        if files_to_move or bad_files:
+        if files_to_move:
             if len(files_to_move) > 0:
                 for source_file in files_to_move:
-                    local_file = os.path.basename(source_file)
-                    processed_path = f"processed/{endpoint}/{local_file}"
+                    path = endpoint_kwargs.get('path')
+                    processed_path = f"{path}/{endpoint}/processed"
                     try:
-                        airbud.move_files_on_s3(self.s3_hook, self.s3_bucket_name, local_file, processed_path)
+                        log.info(f"Moving {source_file} to {processed_path}")
+                        airbud.move_file_on_sftp(self.sftp_conn_id, source_file, processed_path)
                     except Exception as e:
                         log.error(f"Error moving {source_file} to processed: {e}")
                         bad_files.append(source_file)
             elif len(bad_files) == 0 and len(files_to_move) == 0:
                 log.info("Do Nothing.")
-
+        
             # raise error if there are any bad files
             if len(bad_files) > 0:
                 raise Exception(f"Failed to fully process { len(bad_files) } files: {bad_files}")
-            else:
-                return "success"
+    return "success"
+        

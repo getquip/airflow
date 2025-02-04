@@ -153,7 +153,7 @@ def insert_files_to_bq(
                 files_to_move.append(source_file)
             except Exception as e:
                 log.error(f"Error uploading {local_file} to BigQuery: {e}")
-                bad_files.append(local_file)
+                bad_files.append(source_file)
         
     # 3. Check if there are any bad files
     if len(bad_files) > 0:
