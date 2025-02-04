@@ -70,7 +70,10 @@ with DAG(
 			move_to_processed_task = PythonOperator(
 				task_id=f"move_{endpoint}_files_to_processed",
 				python_callable=CLIENT.move_to_processed,
-				op_kwargs={"endpoint": endpoint},
+				op_kwargs={
+					"endpoint": endpoint,
+					"endpoint_kwargs": endpoint_kwargs,
+				},
 				dag=dag,
    				trigger_rule="all_success", # Only run if all tasks are successful
 			)

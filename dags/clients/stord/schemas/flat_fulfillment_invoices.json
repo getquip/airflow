@@ -4,6 +4,10 @@
 		"type": "STRING"
 	},
 	{
+		"name": "merchant_name",
+		"type": "STRING"
+	},
+	{
 		"name": "merchant_number",         
 		"type": "STRING"
 	},

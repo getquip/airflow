@@ -114,13 +114,14 @@ class GetStord(airbud.GetClient):
             sftp_files = task_instance.xcom_pull(task_ids=upstream_task, key='sftp_files')
 
             files_to_move, bad_files = airbud.insert_files_to_bq(
-                files,
+                sftp_files,
                 endpoint,
                 self.dataset,
                 self.bq_client,
                 self.gcs_bucket,
                 **kwargs
                 )
+            
             # Push list of new GCS files to XCom
             task_instance = kwargs['task_instance']
             task_instance.xcom_push(key='files_to_move', value=files_to_move)
@@ -132,6 +133,7 @@ class GetStord(airbud.GetClient):
     def move_to_processed(
         self,
         endpoint: str,
+        endpoint_kwargs:str,
         **kwargs
         ) -> str:
         # Check upstream task
@@ -143,11 +145,11 @@ class GetStord(airbud.GetClient):
         if files_to_move:
             if len(files_to_move) > 0:
                 for source_file in files_to_move:
-                    processed_path = f"{self.parent_path}/{endpoint}/processed"
+                    path = endpoint_kwargs.get('path')
+                    processed_path = f"{path}/{endpoint}/processed"
                     try:
-                        log.info(f"Moving {source_file} to {processed_path}...")
+                        log.info(f"Moving {source_file} to {processed_path}")
                         airbud.move_file_on_sftp(self.sftp_conn_id, source_file, processed_path)
-                        return "success"
                     except Exception as e:
                         log.error(f"Error moving {source_file} to processed: {e}")
                         bad_files.append(source_file)
@@ -157,4 +159,5 @@ class GetStord(airbud.GetClient):
             # raise error if there are any bad files
             if len(bad_files) > 0:
                 raise Exception(f"Failed to fully process { len(bad_files) } files: {bad_files}")
+    return "success"
         

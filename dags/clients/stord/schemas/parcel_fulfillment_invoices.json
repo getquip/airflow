@@ -3,6 +3,18 @@
 		"name": "total_amt",
 		"type": "STRING"
 	},
+	{
+		"name": "no_of_pkgs",
+		"type": "STRING"
+	},
+	{
+		"name": "contents",
+		"type": "STRING"
+	},
+	{
+		"name": "no_of_pieces",
+		"type": "STRING"
+	},
 	{ 
 		"name": "fee_surcharge_type_1",
 		"type": "STRING"
