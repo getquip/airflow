@@ -74,7 +74,7 @@ def get_records_from_file(
     
     return records
 
-def list_all_files(
+def list_all_blobs(
     bucket: object, # GCS bucket client object
     path: str,
     ) -> List[str]:
@@ -82,7 +82,11 @@ def list_all_files(
     
     # List all files in the GCS bucket under the given path
     blobs = bucket.list_blobs(prefix=path)
-    files = sorted([blob.name for blob in blobs])
+    # Exclude files in the 'processed' directory
+    files = [
+        blob for blob in blobs
+        if not blob.name.startswith(f"{path.rstrip('/')}/processed/")
+    ]
 
     return files
 
@@ -125,8 +129,30 @@ def load_files_to_gcs(
     json_filename, dag_run_date = generate_json_blob_name(
         dataset, endpoint, supplemental=filename_no_file_type, **kwargs)
     
+    # Read the CSV file into a DataFrame in chunks
+    df = file_storage.load_csv_to_df(source_file)
+
     # Clean the column names and convert to JSON
-    records = file_storage.clean_column_names(source_file, json_filename, dag_run_date)
+    records = file_storage.clean_column_names(df, json_filename, dag_run_date)
     
     # Upload the JSON data to GCS
     upload_json_to_gcs(gcs_bucket, json_filename, records)
+
+def move_file_in_gcs(bucket_name, source_blob_name, destination_blob_name):
+    # Initialize a client
+    storage_client = storage.Client()
+
+    # Get the GCS bucket
+    bucket = storage_client.bucket(bucket_name)
+
+    # Get the source and destination blobs
+    source_blob = bucket.blob(source_blob_name)
+    destination_blob = bucket.blob(destination_blob_name)
+
+    # Copy the source file to the destination
+    destination_blob.copy_from(source_blob)
+
+    # Delete the source file
+    source_blob.delete()
+
+    print(f"Moved {source_blob_name} to {destination_blob_name}")

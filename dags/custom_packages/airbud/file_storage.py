@@ -46,14 +46,12 @@ def load_csv_to_df(csv_file: str) -> pd.DataFrame:
         return []
 
 def clean_column_names(
-    csv_file: str, # local path to the CSV file
+    df: pd.DataFrame, # DataFrame to clean
     json_file_path: str, # Name of the csv GCS file
     dag_run_date: str, # Date of the DAG run
     ) -> List[Dict]: # Returns csv as json records
     """Clean column names and convert CSV to JSON records."""
     
-    # Read the CSV file into a DataFrame in chunks
-    df = load_csv_to_df(csv_file)
     if len(df) > 0:
         # Get the original column names from the first row
         cleaned_columns = []
