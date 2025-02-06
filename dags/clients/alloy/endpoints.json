@@ -1,0 +1,10 @@
+{
+	"sell_through_report": {
+		"directory": "sell-through-report",
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "day",
+			"clustering_fields": ["partner", "location_number", "product_category", "product_family"]
+		}	
+	}
+}
