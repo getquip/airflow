@@ -139,7 +139,7 @@ class GetRecharge(airbud.GetClient):
         if len(records) > 0:
             log.info(f"Uploading {len(records)} records to GCS...")
             filename = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
-            airbud.upload_json_to_gcs(self.gcs_bucket, filename, records, **kwargs)
+            airbud.upload_json_to_gcs(self.gcs_bucket, filename, records)
             return "success"
         else:
             # Store bookmark for next run
