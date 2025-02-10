@@ -9,7 +9,7 @@
 		}	
 	},
 
-	"parcel_invoices": {
+	"postage_invoices": {
 		"path": "billing",
 		"ignore": ["ignore"],
 		"bigquery_metadata": {
