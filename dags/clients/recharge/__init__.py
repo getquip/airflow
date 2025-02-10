@@ -114,8 +114,10 @@ class GetRecharge(airbud.GetClient):
                 df_max = df["created_at"].max() 
             else:
                 df_max = df["updated_at"].max()
-            stop_at = stop_at if stop_at is not None else current_date
-            next_page = str(max(pd.to_datetime(df_max), stop_at))
+            if stop_at:
+                next_page = str(max(pd.to_datetime(df_max), stop_at))
+            else:
+                next_page = str(max(pd.to_datetime(df_max)))
         else:
             next_page = str(stop_at)
         return records, next_page
