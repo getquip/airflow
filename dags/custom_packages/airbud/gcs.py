@@ -27,7 +27,7 @@ def generate_json_blob_name(
     """Generate the destination blob name for a JSON file in GCS."""
     # Get DAG context
     dag_run: DagRun = kwargs.get('dag_run')
-    dag_run_date = str(dag_run.execution_date)
+    dag_run_date = str(dag_run.logical_date)
 
     # Generate the GCS file path
     rooth_path = f"get/{dataset_name}/{endpoint}"

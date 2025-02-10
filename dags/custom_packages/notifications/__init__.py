@@ -13,7 +13,7 @@ def send_slack_alert(context):
     dag_name = context.get('dag').dag_id
     task_name = context.get('task').task_id
     log_url = context.get('task_instance').log_url
-    execution_date = context.get('execution_date')
+    logical_date = context.get('logical_date')
 
     # Compose message
     slack_msg = f"""
@@ -21,7 +21,7 @@ def send_slack_alert(context):
     ==================================================
     *DAG*: *{dag_name}*
     *Task*: {task_name}
-    *Execution Date*: {execution_date}
+    *Execution Date*: {logical_date}
     *Log URL*: {log_url}
     """
 
