@@ -117,7 +117,7 @@ class GetRecharge(airbud.GetClient):
             if stop_at:
                 next_page = str(max(pd.to_datetime(df_max), stop_at))
             else:
-                next_page = str(max(pd.to_datetime(df_max)))
+                next_page = str(df_max)
         else:
             next_page = str(stop_at)
         return records, next_page
