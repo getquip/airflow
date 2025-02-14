@@ -5,16 +5,15 @@ from clients.recharge import GetRecharge
 
 
 project_id = 'quip-dw-raw'
-API_KEY = airbud.get_secrets(project_id, 'recharge', prefix="api__")
-RECHARGE_CLIENT = GetRecharge(API_KEY['api_key'])
+bucket_name = 'quip_airflow'
+RECHARGE_CLIENT = GetRecharge(project_id, bucket_name)
 
-endpoint = 'charges'
-url = f"{RECHARGE_CLIENT.base_url}/{endpoint}"
+endpoint = 'events'
+url = f"{RECHARGE_CLIENT.base_url}{endpoint}"
 headers = RECHARGE_CLIENT.headers
 params = {
 	"limit": 250,
-	"updated_at_min": "2024-06-20T00:00:00+00:00",
-	"updated_at_max": "2024-06-21T00:00:00+00:00"
+	"cursor": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTAyLTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiA5NzQwNzk5MDIwLCAibGFzdF92YWx1ZSI6IDk3NDA3OTkwMjAsICJzb3J0X2J5IjogImlkLWRlc2MiLCAiY3Vyc29yX2RpciI6ICJuZXh0In0="
 }
 records = []
 
@@ -25,11 +24,11 @@ while pd.to_datetime(params["updated_at_max"]) < stop_backfill:
     u_min= params["updated_at_min"]
     u_max= params["updated_at_max"]
     while True:
-        response = get_data(url, headers, params, None, None)
+        response = airbud.get_data(url, headers, params, None, None)
         
         # Check for Rate Limiting or other errors
         if response.status_code != 200:
-            response = retry_get_data(url, headers, params, None, None)
+            response = airbud.retry_get_data(url, headers, params, None, None)
         if response.status_code == 200:
             # Parse response for records and append to records list
             response_json = response.json()
@@ -82,6 +81,55 @@ airbud.insert_records_to_bq(bq_client, table_ref, records, max_retries=3, chunk_
 bucket = RECHARGE_CLIENT.gcs_bucket
 
 # Upload the JSON data as a string to GCS
-filename = f"get/recharge/{endpoint}/historical_to_2025.json"
+filename = f"get/recharge/{endpoint}/historical_from_march_2024.json"
 blob = bucket.blob(filename)
 blob.upload_from_string(json.dumps(records), content_type='application/json')
+
+
+cursors = {
+  "02/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTAyLTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiA5NzQwNzk5MDIwLCAibGFzdF92YWx1ZSI6IDk3NDA3OTkwMjAsICJzb3J0X2J5IjogImlkLWRlc2MiLCAiY3Vyc29yX2RpciI6ICJuZXh0In0=",
+  "03/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTAzLTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMDAxMTU0NDE3NCwgImxhc3RfdmFsdWUiOiAxMDAxMTU0NDE3NCwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "04/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTA0LTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMDM0OTQxOTU1OCwgImxhc3RfdmFsdWUiOiAxMDM0OTQxOTU1OCwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "05/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTA1LTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMDczMjM2MDAyNiwgImxhc3RfdmFsdWUiOiAxMDczMjM2MDAyNiwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "06/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTA2LTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMTA2MjM1NTg0NSwgImxhc3RfdmFsdWUiOiAxMTA2MjM1NTg0NSwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "07/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTA3LTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMTQyNzg5ODk3NCwgImxhc3RfdmFsdWUiOiAxMTQyNzg5ODk3NCwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "08/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTA4LTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMTc4MDU2NDkzNSwgImxhc3RfdmFsdWUiOiAxMTc4MDU2NDkzNSwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "09/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTA5LTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMjE0MTIzMzI3MCwgImxhc3RfdmFsdWUiOiAxMjE0MTIzMzI3MCwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "10/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTEwLTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMjUyNTcwNTYxNCwgImxhc3RfdmFsdWUiOiAxMjUyNTcwNTYxNCwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "11/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTExLTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMjk0NjY5MzI2NCwgImxhc3RfdmFsdWUiOiAxMjk0NjY5MzI2NCwgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ=",
+  "12/01/24": "eyJjcmVhdGVkX2F0X21pbiI6ICIyMDI0LTEyLTAxVDAwOjAwOjAwWiIsICJzdGFydGluZ19iZWZvcmVfaWQiOiAxMzM3OTAxNTM1MywgImxhc3RfdmFsdWUiOiAxMzM3OTAxNTM1MywgInNvcnRfYnkiOiAiaWQtZGVzYyIsICJjdXJzb3JfZGlyIjogIm5leHQifQ="
+}
+
+records = []
+for cursor in cursors.values():
+    params = {
+        "limit": 250,
+        "cursor": cursor,
+        "object_type": "subscription"
+    }
+    
+    while True:
+        response = airbud.get_data(url, headers, params, None, None)
+        
+        # Check for Rate Limiting or other errors
+        if response.status_code != 200:
+            response = airbud.retry_get_data(url, headers, params, None, None)
+        if response.status_code == 200:
+            # Parse response for records and append to records list
+            response_json = response.json()
+            records.extend(response_json.get(endpoint))
+            
+            # Check if there is another page of data
+            next_page = response_json.get("next_cursor")
+            if next_page:
+                # Only pass cursor as params
+                print(f"Fetching next page of data...{next_page}")
+                params = {"cursor": next_page}
+            else:
+                print("No more data to fetch.")
+                break
+        else:
+            log.error(f"Pagination halted due to status code: {response.status_code}")
+            break
+    
+    print(len(records))
