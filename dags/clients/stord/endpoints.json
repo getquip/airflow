@@ -1,5 +1,5 @@
 {
-	"flat_fulfillment_invoices": {
+	"fulfillment_invoices": {
 		"path": "billing",
 		"ignore": ["ignore"],
 		"bigquery_metadata": {
@@ -9,7 +9,7 @@
 		}	
 	},
 
-	"parcel_fulfillment_invoices": {
+	"postage_invoices": {
 		"path": "billing",
 		"ignore": ["ignore"],
 		"bigquery_metadata": {

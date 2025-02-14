@@ -105,15 +105,19 @@ class GetRecharge(airbud.GetClient):
             else:
                 log.info(f"Pagination halted due to status code: {response.status_code}")
                 break
-            
+        
         # Pass bookmark for next run
+        log.info(f"Finished with {len(records)} records.")
         if len(records) > 0:
             df = pd.DataFrame(records)
             if endpoint == "events":
                 df_max = df["created_at"].max() 
             else:
                 df_max = df["updated_at"].max()
-            next_page = str(max(pd.to_datetime(df_max), stop_at))
+            if stop_at:
+                next_page = str(max(pd.to_datetime(df_max), stop_at))
+            else:
+                next_page = str(df_max)
         else:
             next_page = str(stop_at)
         return records, next_page
@@ -138,8 +142,8 @@ class GetRecharge(airbud.GetClient):
         # Upload data to GCS
         if len(records) > 0:
             log.info(f"Uploading {len(records)} records to GCS...")
-            filename = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
-            airbud.upload_json_to_gcs(self.gcs_bucket, filename, records, **kwargs)
+            json_filename, dag_run_date = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
+            airbud.upload_json_to_gcs(self.gcs_bucket, json_filename, records)
             return "success"
         else:
             # Store bookmark for next run
@@ -159,8 +163,8 @@ class GetRecharge(airbud.GetClient):
 
         if return_value == "success":
             try: # Get records from file or API
-                filename = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
-                records = airbud.get_records_from_file(self.gcs_bucket, filename)
+                json_filename, dag_run_date = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
+                records = airbud.get_records_from_file(self.gcs_bucket, json_filename)
                 log.info(f"Successfully loaded {len(records)} records from GCS.")
             except Exception as e:
                 raise Exception(f"Failed to get records from file or it doesn't exist: { e }")
