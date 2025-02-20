@@ -35,7 +35,7 @@ default_args = {
 with DAG(
     dag_id="get__ceva",
     default_args=default_args,
-    description="A DAG to sync files from an S3 bucket withing Quip's domain.",
+    description="A DAG to sync files from an S3 bucket within Quip's domain.",
     schedule_interval="0 */5 * * *", # Every 5 hours
     start_date=datetime(2025, 1, 1),
     catchup=False,

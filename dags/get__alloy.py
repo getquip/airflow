@@ -34,7 +34,7 @@ default_args = {
 with DAG(
     dag_id="get__alloy",
     default_args=default_args,
-    description="A DAG to sync files from an S3 bucket withing Quip's domain.",
+    description="A DAG to sync files from a Alloy managed GCS bucket to Quip's domain.",
     schedule_interval="0 13 * * *", # Daily @ 8:00 AM EST
     start_date=datetime(2025, 1, 1),
     catchup=False,
