@@ -1,0 +1,82 @@
+[
+	{
+		"name": "partner",
+		"type": "STRING"
+	},
+	{
+		"name": "location_number",
+		"type": "STRING"
+	},
+	{
+		"name": "product_category",
+		"type": "STRING"
+	},
+	{
+		"name": "product_family",
+		"type": "STRING"
+	},
+	{
+		"name": "product_color",
+		"type": "STRING"
+	},
+	{
+		"name": "packaging_generation",
+		"type": "STRING"
+	},
+	{
+		"name": "part_number",
+		"type": "STRING"
+	},
+	{
+		"name": "day",
+		"type": "STRING"
+	},
+	{
+		"name": "unit_sales",
+		"type": "STRING"
+	},
+	{
+		"name": "sales_retail_price",
+		"type": "STRING"
+	},
+	{
+		"name": "units_on_hand",
+		"type": "STRING"
+	},
+	{
+		"name": "unit_sales_circular",
+		"type": "STRING"
+	},
+	{
+		"name": "sales_circular",
+		"type": "STRING"
+	},
+	{
+		"name": "unit_sales_promo",
+		"type": "STRING"
+	},
+	{
+		"name": "sales_promo",
+		"type": "STRING"
+	},
+	{
+		"name": "unit_sales_clearance",
+		"type": "STRING"
+	},
+	{
+		"name": "sales_clearance",
+		"type": "STRING"
+	},
+	{
+		"name": "average_retail_price",
+		"type": "STRING"
+	},	  
+	{
+		"name": "source_file_name",
+		"type": "STRING"
+	},
+	{
+		"name": "source_synced_at",
+		"type": "TIMESTAMP"
+	}
+]

@@ -1,0 +1,46 @@
+{
+	"daily_sell_through_report": {
+		"directory": "daily_sell_through_report",
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["partner", "location_number", "product_category", "product_family"]
+		}	
+	},
+
+	"weekly_walmart_forecast": {
+		"directory": "weekly_walmart_forecast",
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["location_type", "product_family", "product_category", "location_number"]
+		}	
+	},
+
+	"weekly_target_forecast": {
+		"directory": "weekly_target_forecast",
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["location_type", "product_family", "product_category", "location_number"]
+		}	
+	},
+
+	"weekly_location_master": {
+		"directory": "weekly_location_master",
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["partner", "census_division", "postal_code", "location_number"]
+		}	
+	},
+
+	"product_master": {
+		"directory": "product_master",
+		"bigquery_metadata": {
+			"partitioning_type": "DAY",
+			"partitioning_field": "source_synced_at",
+			"clustering_fields": ["product_category", "product_family", "packaging_generation", "week"]
+		}	
+	}
+}

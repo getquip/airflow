@@ -74,7 +74,7 @@ def get_records_from_file(
     
     return records
 
-def list_all_files(
+def list_all_blobs(
     bucket: object, # GCS bucket client object
     path: str,
     ) -> List[str]:
@@ -82,7 +82,12 @@ def list_all_files(
     
     # List all files in the GCS bucket under the given path
     blobs = bucket.list_blobs(prefix=path)
-    files = sorted([blob.name for blob in blobs])
+    # Exclude the directory placeholder (if it exists) and files in 'processed/'
+    return [
+        blob for blob in blobs
+        if blob.name != f"{path.rstrip('/')}/"  # Exclude the directory placeholder
+        and not blob.name.startswith(f"{path.rstrip('/')}/processed/")
+    ]
 
     return files
 
@@ -125,8 +130,30 @@ def load_files_to_gcs(
     json_filename, dag_run_date = generate_json_blob_name(
         dataset, endpoint, supplemental=filename_no_file_type, **kwargs)
     
+    # Read the CSV file into a DataFrame in chunks
+    df = file_storage.load_csv_to_df(source_file)
+
     # Clean the column names and convert to JSON
-    records = file_storage.clean_column_names(source_file, json_filename, dag_run_date)
+    records = file_storage.clean_column_names(df, json_filename, dag_run_date)
     
     # Upload the JSON data to GCS
     upload_json_to_gcs(gcs_bucket, json_filename, records)
+
+def move_file_in_gcs(
+    gcs_client: object, # GCS client object
+    source_bucket: object, # Source GCS bucket client object
+    source_blob_name: str, # Source blob name
+    destination_bucket: object, # Destination GCS bucket client object
+    destination_blob_name: str, # Destination blob name
+    ):
+    log.info(f"Moving {source_blob_name} to {destination_blob_name}")
+    # Get the source and destination blobs
+    source_blob = source_bucket.blob(source_blob_name)
+    destination_blob = destination_bucket.blob(destination_blob_name)
+
+    source_bucket.copy_blob(source_blob, destination_bucket, destination_blob_name)
+
+    # Delete the source file
+    source_blob.delete()
+
+    log.info("Moved complete.")
