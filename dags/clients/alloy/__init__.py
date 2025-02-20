@@ -21,7 +21,6 @@ class GetAlloy(airbud.GetClient):
         self, 
         project_id: str, 
         bucket_name: str, 
-        aws_conn_id: str,
         ) -> None:
         # Define client's dataset name
         self.dataset = "alloy"
@@ -30,8 +29,7 @@ class GetAlloy(airbud.GetClient):
         super().__init__(project_id, bucket_name, self.dataset) 
 
         # Inititalize Third-party GCS bucket
-        self.alloy_bucket = gcs_client.get_bucket('alloy_exports_v161')
-        self.gcs_client = storage.Client()
+        self.alloy_bucket = self.gcs_client.get_bucket('alloy_exports_v161')
         self.gcs_bucket = self.gcs_client.get_bucket(bucket_name)
         
         # Initialize BigQuery tables if they doesn't exist
@@ -51,37 +49,41 @@ class GetAlloy(airbud.GetClient):
         gcs_path = f"get/{self.dataset}/{endpoint}"
 
         # Get list of unprocessed csv files
-		new_files = airbud.list_all_blobs(alloy_bucket_name, endpoint)
-        
+        new_files = airbud.list_all_blobs(self.alloy_bucket, endpoint)
         
         if len(new_files) > 0:
             log.info(f"Found {len(new_files)} files to process.")
+            new_file_names = []
 
             for source_blob in new_files:
-                # Copy the blob to the destination bucket
-    			source_bucket.copy_blob(source_blob, self.gcs_bucket, source_blob.name)
+                # Get file name
+                log.info(f"Processing {source_blob.name}")
+                log.info(f"blob {source_blob}")
+                source_file_name = source_blob.name.split("/")[-1]
+                
+                # Download the blob to the environment
+                log.info(f"Downloading {source_file_name} to local environment.")
+                source_blob.download_to_filename(source_file_name)
+
+                # Convert to df 
+                df = airbud.load_csv_to_df(source_file_name)
 
                 # Generate the destination blob name
-				filename_no_file_type = source_blob.name.split(".")[0]
-				json_filename, dag_run_date = generate_json_blob_name(
-					self.dataset, endpoint, supplemental=filename_no_file_type, **kwargs)
+                filename_no_file_type = source_file_name.split(".")[0]
+                json_filename, dag_run_date = airbud.generate_json_blob_name(
+                    self.dataset, endpoint, supplemental=filename_no_file_type, **kwargs)
 
-				# Download the blob as a string
-   				csv_data = blob.download_as_text()
-
-				# Use appropriate reader based on the file type (CSV in this case)
-				df = load_csv_to_df(csv_data)
-
-				# Clean the column names and convert to JSON
-				records = airbud.clean_column_names(source_file, json_filename, dag_run_date)
-				
-				# Upload the JSON data to GCS
-				upload_json_to_gcs(gcs_bucket, json_filename, records)
+                # Clean the column names and convert to JSON
+                records = airbud.clean_column_names(df, json_filename, dag_run_date)
+                
+                # Upload the JSON data to GCS
+                airbud.upload_json_to_gcs(self.gcs_bucket, json_filename, records)
+                new_file_names.append(json_filename)
 
             # Push list of new GCS files to XCom
             task_instance = kwargs['task_instance']
-            task_instance.xcom_push(key='s3_files', value=new_file_paths)
-            log.info(f"Stored file names for {endpoint} in XComs: {new_file_paths}")
+            task_instance.xcom_push(key='files', value=new_file_names)
+            log.info(f"Stored file names for {endpoint} in XComs: {new_file_names}")
             return "success"
         else:
             log.info(f"No new files found in bucket")
@@ -100,7 +102,7 @@ class GetAlloy(airbud.GetClient):
         
         if return_value == "success":
             # Get the file names from XCom
-            files = task_instance.xcom_pull(task_ids=upstream_task, key='s3_files')
+            files = task_instance.xcom_pull(task_ids=upstream_task, key='files')
 
             files_to_move, bad_files = airbud.insert_files_to_bq(
                 files,
@@ -118,7 +120,7 @@ class GetAlloy(airbud.GetClient):
         else:
             log.info("Do Nothing.")
 
-        """Move files in SFTP to processed folder."""
+        """Move files in GCS to processed folder."""
     def move_to_processed(
         self,
         endpoint: str,
@@ -133,9 +135,17 @@ class GetAlloy(airbud.GetClient):
         if files_to_move or bad_files:
             if len(files_to_move) > 0:
                 for source_file in files_to_move:
-                    destination_blob_name = f"{endpoint}/processed/{source_file}"
+                    file_name = source_file.split("/")[-1].split(".")[0]
+                    source_blob_name = f"{endpoint}/{file_name}.csv"
+                    destination_blob_name = f"{endpoint}/processed/{file_name}.csv"
                     try:
-                        airbud.move_file_in_gcs(self.alloy_bucket, source_file, destination_blob_name)
+                        airbud.move_file_in_gcs(
+                            self.gcs_client, 
+                            self.alloy_bucket, 
+                            source_blob_name, 
+                            self.alloy_bucket, 
+                            destination_blob_name)
+                            
                     except Exception as e:
                         log.error(f"Error moving {source_file} to processed: {e}")
                         bad_files.append(source_file)

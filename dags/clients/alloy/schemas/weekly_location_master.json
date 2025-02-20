@@ -1,0 +1,66 @@
+[
+    {
+        "name": "partner",
+        "type": "STRING"
+    },
+    {
+        "name": "location_number",
+        "type": "STRING"
+    },
+    {
+        "name": "location_type",
+        "type": "STRING"
+    },
+    {
+        "name": "latitude",
+        "type": "STRING"
+    },
+    {
+        "name": "longitude",
+        "type": "STRING"
+    },
+    {
+        "name": "country",
+        "type": "STRING"
+    },
+    {
+        "name": "census_region",
+        "type": "STRING"
+    },
+    {
+        "name": "census_division",
+        "type": "STRING"
+    },
+    {
+        "name": "state",
+        "type": "STRING"
+    },
+    {
+        "name": "county",
+        "type": "STRING"
+    },
+    {
+        "name": "address1",
+        "type": "STRING"
+    },
+    {
+        "name": "postal_code",
+        "type": "STRING"
+    },
+    {
+        "name": "unit_sales_last_week",
+        "type": "INTEGER"
+    },
+    {
+        "name": "average_units_on_hand_last_week",
+        "type": "STRING"
+    },
+    {
+        "name": "source_file_name",
+        "type": "STRING"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    }
+]

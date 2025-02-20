@@ -1,0 +1,90 @@
+[
+    {
+        "name": "part_number",
+        "type": "STRING"
+    },
+    {
+        "name": "upc",
+        "type": "STRING"
+    },
+    {
+        "name": "walmart_id",
+        "type": "STRING"
+    },
+    {
+        "name": "product_description",
+        "type": "STRING"
+    },
+    {
+        "name": "product_category",
+        "type": "STRING"
+    },
+    {
+        "name": "product_family",
+        "type": "STRING"
+    },
+    {
+        "name": "product_color",
+        "type": "STRING"
+    },
+    {
+        "name": "location_type",
+        "type": "STRING"
+    },
+    {
+        "name": "location_number",
+        "type": "STRING"
+    },
+    {
+        "name": "location_name",
+        "type": "STRING"
+    },
+    {
+        "name": "week",
+        "type": "STRING"
+    },
+    {
+        "name": "unit_sales",
+        "type": "STRING"
+    },
+    {
+        "name": "sales_retail_price",
+        "type": "FLOAT"
+    },
+    {
+        "name": "on_hand_retail_price",
+        "type": "FLOAT"
+    },
+    {
+        "name": "units_in_transit_inbound",
+        "type": "STRING"
+    },
+    {
+        "name": "units_on_hand",
+        "type": "STRING"
+    },
+    {
+        "name": "upstream_units_on_hand",
+        "type": "STRING"
+    },
+    {
+        "name": "upstream_units_on_order_inbound",
+        "type": "STRING"
+    },
+    {
+        "name": "units_on_order_inbound",
+        "type": "STRING"
+    },
+    {
+        "name": "target_dpci",
+        "type": "STRING"
+    },
+    {
+        "name": "source_file_name",
+        "type": "STRING"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    }
+]

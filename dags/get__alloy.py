@@ -10,7 +10,7 @@ from airflow.utils.task_group import TaskGroup
 from airflow.operators.python import PythonOperator
 
 # Custom package imports
-from clients.ceva import GetAlloy
+from clients.alloy import GetAlloy
 from custom_packages import airbud
 from custom_packages.cleanup import cleanup_xcom
 from custom_packages.notifications import send_slack_alert
@@ -18,7 +18,7 @@ from custom_packages.notifications import send_slack_alert
 # Define constants for data source
 PROJECT_ID = Variable.get("PROJECT_ID", default_var="quip-dw-raw-dev")
 GCS_BUCKET = Variable.get("GCS_BUCKET", default_var="quip_airflow_dev")
-CLIENT = GetCeva(PROJECT_ID, GCS_BUCKET)
+CLIENT = GetAlloy(PROJECT_ID, GCS_BUCKET)
 
 
 # Define default arguments for the DAG
@@ -35,7 +35,7 @@ with DAG(
     dag_id="get__alloy",
     default_args=default_args,
     description="A DAG to sync files from an S3 bucket withing Quip's domain.",
-    schedule_interval="0 */5 * * *", # Every 5 hours
+    schedule_interval="0 13 * * *", # Daily @ 8:00 AM EST
     start_date=datetime(2025, 1, 1),
     catchup=False,
     on_success_callback=cleanup_xcom,

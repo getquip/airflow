@@ -70,6 +70,10 @@ def clean_column_names(
             cleaned_col = cleaned_col.replace("'", "")
             # Replace special characters with underscores
             cleaned_col = re.sub(r'[^a-zA-Z0-9]', '_', cleaned_col)
+            # Replace multiple underscores with a single one
+            cleaned_col = re.sub(r'_{2,}', '_', cleaned_col)  
+            # Remove leading/trailing underscores
+            cleaned_col = cleaned_col.strip('_')  
             # Append the cleaned column name to the list
             cleaned_columns.append(cleaned_col)
             

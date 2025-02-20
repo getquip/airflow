@@ -82,10 +82,11 @@ def list_all_blobs(
     
     # List all files in the GCS bucket under the given path
     blobs = bucket.list_blobs(prefix=path)
-    # Exclude files in the 'processed' directory
-    files = [
+    # Exclude the directory placeholder (if it exists) and files in 'processed/'
+    return [
         blob for blob in blobs
-        if not blob.name.startswith(f"{path.rstrip('/')}/processed/")
+        if blob.name != f"{path.rstrip('/')}/"  # Exclude the directory placeholder
+        and not blob.name.startswith(f"{path.rstrip('/')}/processed/")
     ]
 
     return files
@@ -138,21 +139,21 @@ def load_files_to_gcs(
     # Upload the JSON data to GCS
     upload_json_to_gcs(gcs_bucket, json_filename, records)
 
-def move_file_in_gcs(bucket_name, source_blob_name, destination_blob_name):
-    # Initialize a client
-    storage_client = storage.Client()
-
-    # Get the GCS bucket
-    bucket = storage_client.bucket(bucket_name)
-
+def move_file_in_gcs(
+    gcs_client: object, # GCS client object
+    source_bucket: object, # Source GCS bucket client object
+    source_blob_name: str, # Source blob name
+    destination_bucket: object, # Destination GCS bucket client object
+    destination_blob_name: str, # Destination blob name
+    ):
+    log.info(f"Moving {source_blob_name} to {destination_blob_name}")
     # Get the source and destination blobs
-    source_blob = bucket.blob(source_blob_name)
-    destination_blob = bucket.blob(destination_blob_name)
+    source_blob = source_bucket.blob(source_blob_name)
+    destination_blob = destination_bucket.blob(destination_blob_name)
 
-    # Copy the source file to the destination
-    destination_blob.copy_from(source_blob)
+    source_bucket.copy_blob(source_blob, destination_bucket, destination_blob_name)
 
     # Delete the source file
     source_blob.delete()
 
-    print(f"Moved {source_blob_name} to {destination_blob_name}")
+    log.info("Moved complete.")

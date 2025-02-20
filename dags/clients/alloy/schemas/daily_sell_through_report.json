@@ -29,47 +29,47 @@
 	},
 	{
 		"name": "day",
-		"type": "DATE"
+		"type": "STRING"
 	},
 	{
 		"name": "unit_sales",
-		"type": "INTEGER"
+		"type": "STRING"
 	},
 	{
 		"name": "sales_retail_price",
-		"type": "FLOAT"
+		"type": "STRING"
 	},
 	{
 		"name": "units_on_hand",
-		"type": "INTEGER"
+		"type": "STRING"
 	},
 	{
 		"name": "unit_sales_circular",
-		"type": "INTEGER"
+		"type": "STRING"
 	},
 	{
 		"name": "sales_circular",
-		"type": "FLOAT"
+		"type": "STRING"
 	},
 	{
 		"name": "unit_sales_promo",
-		"type": "INTEGER"
+		"type": "STRING"
 	},
 	{
 		"name": "sales_promo",
-		"type": "FLOAT"
+		"type": "STRING"
 	},
 	{
 		"name": "unit_sales_clearance",
-		"type": "INTEGER"
+		"type": "STRING"
 	},
 	{
 		"name": "sales_clearance",
-		"type": "FLOAT"
+		"type": "STRING"
 	},
 	{
 		"name": "average_retail_price",
-		"type": "FLOAT"
+		"type": "STRING"
 	},	  
 	{
 		"name": "source_file_name",

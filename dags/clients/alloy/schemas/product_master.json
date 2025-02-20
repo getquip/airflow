@@ -1,0 +1,42 @@
+[
+	{
+		"name": "product_category",
+        "type": "STRING"
+    },
+	{
+		"name": "product_family",
+        "type": "STRING"
+    },
+	{
+		"name": "product_color",
+        "type": "STRING"
+    },
+	{
+		"name": "packaging_generation",
+        "type": "STRING"
+    },
+	{
+		"name": "week",
+        "type": "STRING"
+    },
+	{
+		"name": "day",
+        "type": "STRING"
+    },
+	{
+		"name": "unit_sales",
+        "type": "STRING"
+    },
+	{
+		"name": "average_units_on_hand",
+        "type": "STRING"
+    },
+	{
+        "name": "source_file_name",
+        "type": "STRING"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    }
+]
