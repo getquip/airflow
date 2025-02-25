@@ -1,0 +1,17 @@
+{
+    "Ads": {
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", 
+            "partitioning_field": "date_created",
+            "clustering_fields": ["campaign_id", "deal_id", "deal_type", "id"]
+        }
+    },
+
+	"MediaPartners": {
+        "bigquery_metadata": {
+            "partitioning_type": "DAY", 
+            "partitioning_field": "date_created",
+            "clustering_fields": ["state", "id", "partner_type"]
+        }
+    }
+}

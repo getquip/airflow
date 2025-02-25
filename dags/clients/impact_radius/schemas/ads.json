@@ -1,0 +1,312 @@
+[
+    {
+        "name": "id",
+        "type": "STRING"
+    },
+    {
+        "name": "name",
+        "type": "STRING"
+    },
+    {
+        "name": "description",
+        "type": "STRING"
+    },
+    {
+        "name": "campaign_id",
+        "type": "STRING"
+    },
+    {
+        "name": "campaign_name",
+        "type": "STRING"
+    },
+    {
+        "name": "ad_type",
+        "type": "STRING"
+    },
+    {
+        "name": "landing_page",
+        "type": "STRING"
+    },
+    {
+        "name": "mobile_fallbacks",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "date_created",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "date_last_updated",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "custom_ad_serving_url",
+        "type": "STRING"
+    },
+    {
+        "name": "ad_code_template",
+        "type": "STRING"
+    },
+    {
+        "name": "iab_ad_unit",
+        "type": "STRING"
+    },
+    {
+        "name": "third_party_servable_ad_creative_height",
+        "type": "STRING"
+    },
+    {
+        "name": "third_party_servable_ad_creative_width",
+        "type": "STRING"
+    },
+    {
+        "name": "banner_alternative_tag",
+        "type": "STRING"
+    },
+    {
+        "name": "link_text",
+        "type": "STRING"
+    },
+    {
+        "name": "coupon_link_name",
+        "type": "STRING"
+    },
+    {
+        "name": "coupon_allow_custom_promo_code",
+        "type": "STRING"
+    },
+    {
+        "name": "get_html_code_type",
+        "type": "STRING"
+    },
+    {
+        "name": "customisation_charge",
+        "type": "STRING"
+    },
+    {
+        "name": "labels",
+        "type": "STRING"
+    },
+    {
+        "name": "allow_deep_linking",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "mobile_ready",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "phone_tracking",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "promo_code_tracking",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "language",
+        "type": "STRING"
+    },
+    {
+        "name": "limited_time_start_date",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "limited_time_end_date",
+        "type": "STRING"
+    },
+    {
+        "name": "restricted_media_partners",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "restricted_media_partner_groups",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "season",
+        "type": "STRING"
+    },
+    {
+        "name": "top_seller",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "deal_id",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_name",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_description",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_state",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_type",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_scope",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_products",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "deal_categories",
+        "type": "STRING"
+    },
+    {
+        "name": "discount_type",
+        "type": "STRING"
+    },
+    {
+        "name": "discount_amount",
+        "type": "STRING"
+    },
+    {
+        "name": "discount_currency",
+        "type": "STRING"
+    },
+    {
+        "name": "discount_percent",
+        "type": "STRING"
+    },
+    {
+        "name": "discount_maximum_percent",
+        "type": "STRING"
+    },
+    {
+        "name": "discount_percent_range_start",
+        "type": "STRING"
+    },
+    {
+        "name": "discount_percent_range_end",
+        "type": "STRING"
+    },
+    {
+        "name": "gift",
+        "type": "STRING"
+    },
+    {
+        "name": "rebate_amount",
+        "type": "STRING"
+    },
+    {
+        "name": "rebate_currency",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_default_promo_code",
+        "type": "STRING"
+    },
+    {
+        "name": "minimum_purchase_amount",
+        "type": "STRING"
+    },
+    {
+        "name": "minimum_purchase_amount_currency",
+        "type": "STRING"
+    },
+    {
+        "name": "maximum_savings_amount",
+        "type": "STRING"
+    },
+    {
+        "name": "maximum_savings_currency",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_buy_quantity",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_buy_scope",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_buy_name",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_buy_image_url",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_get_quantity",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_get_scope",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_get_discount_type",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_get_name",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_get_image_url",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_get_discount_amount",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_get_discount_currency",
+        "type": "STRING"
+    },
+    {
+        "name": "bogo_get_discount_percent",
+        "type": "STRING"
+    },
+    {
+        "name": "purchase_limit_quantity",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_start_date",
+        "type": "STRING"
+    },
+    {
+        "name": "deal_end_date",
+        "type": "STRING"
+    },
+    {
+        "name": "synch_ads_promo_codes",
+        "type": "BOOLEAN"
+    },
+    {
+        "name": "deal_restricted_media_partners",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "deal_restricted_media_partner_groups",
+        "type": "STRING",
+        "mode": "REPEATED"
+    },
+    {
+        "name": "uri",
+        "type": "STRING"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    }
+]

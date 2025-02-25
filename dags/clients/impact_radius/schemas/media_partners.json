@@ -1,0 +1,202 @@
+[
+    {
+        "name": "id",
+        "type": "STRING"
+    },
+    {
+        "name": "name",
+        "type": "STRING"
+    },
+    {
+        "name": "description",
+        "type": "STRING"
+    },
+    {
+        "name": "state",
+        "type": "STRING"
+    },
+    {
+        "name": "relationship_state",
+        "type": "STRING"
+    },
+    {
+        "name": "rating",
+        "type": "STRING"
+    },
+    {
+        "name": "partner_type",
+        "type": "STRING"
+    },
+    {
+        "name": "website",
+        "type": "STRING"
+    },
+    {
+        "name": "address_line_1",
+        "type": "STRING"
+    },
+    {
+        "name": "address_line_2",
+        "type": "STRING"
+    },
+    {
+        "name": "city",
+        "type": "STRING"
+    },
+    {
+        "name": "country_state",
+        "type": "STRING"
+    },
+    {
+        "name": "postal_code",
+        "type": "STRING"
+    },
+    {
+        "name": "country",
+        "type": "STRING"
+    },
+    {
+        "name": "timezone",
+        "type": "STRING"
+    },
+    {
+        "name": "currency",
+        "type": "STRING"
+    },
+    {
+        "name": "phone_number",
+        "type": "STRING"
+    },
+    {
+        "name": "primary_promotional_method",
+        "type": "STRING"
+    },
+    {
+        "name": "promotional_methods",
+        "type": "STRING"
+    },
+    {
+        "name": "promoting_countries",
+        "type": "STRING"
+    },
+    {
+        "name": "date_created",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "campaigns",
+        "type": "RECORD",
+        "mode": "REPEATED",
+        "fields": [
+            {
+                "name": "campaign_id",
+                "type": "STRING"
+            },
+            {
+                "name": "campaign_name",
+                "type": "STRING"
+            },
+            {
+                "name": "insertion_order_id",
+                "type": "STRING"
+            },
+            {
+                "name": "insertion_order_name",
+                "type": "STRING"
+            },
+            {
+                "name": "join_date",
+                "type": "TIMESTAMP"
+            }
+        ]
+    },
+    {
+        "name": "groups",
+        "type": "RECORD",
+        "mode": "REPEATED",
+        "fields": [
+            {
+                "name": "group_id",
+                "type": "STRING"
+            },
+            {
+                "name": "group_name",
+                "type": "STRING"
+            }
+        ]
+    },
+    {
+        "name": "mp_value_1",
+        "type": "STRING"
+    },
+    {
+        "name": "mp_value_2",
+        "type": "STRING"
+    },
+    {
+        "name": "mp_value_3",
+        "type": "STRING"
+    },
+    {
+        "name": "account_manager",
+        "type": "STRING"
+    },
+    {
+        "name": "contact",
+        "type": "RECORD",
+        "mode": "NULLABLE",
+        "fields": [
+            {
+                "name": "first_name",
+                "type": "STRING"
+            },
+            {
+                "name": "last_name",
+                "type": "STRING"
+            },
+            {
+                "name": "email_address",
+                "type": "STRING"
+            },
+            {
+                "name": "phone_number",
+                "type": "STRING"
+            }
+        ]
+    },
+    {
+        "name": "properties",
+        "type": "RECORD",
+        "mode": "REPEATED",
+        "fields": [
+            {
+                "name": "property_id",
+                "type": "STRING"
+            },
+            {
+                "name": "property_name",
+                "type": "STRING"
+            },
+            {
+                "name": "property_type",
+                "type": "STRING"
+            },
+            {
+                "name": "property_url",
+                "type": "STRING"
+            }
+        ]
+    },
+    {
+        "name": "date_last_updated",
+        "type": "TIMESTAMP"
+    },
+    {
+        "name": "uri",
+        "type": "STRING"
+    },
+    {
+        "name": "source_synced_at",
+        "type": "TIMESTAMP"
+    }
+]
