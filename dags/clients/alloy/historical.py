@@ -6,11 +6,11 @@ from google.cloud import storage, bigquery
 from custom_packages import airbud
 
 dataset = "alloy"
-gcs_client = storage.Client()
-bq_client = bigquery.Client()
+gcs_client = storage.Client(project = 'quip-dw-raw')
+bq_client = bigquery.Client(project = 'quip-dw-raw')
 endpoint = 'daily_sell_through_report'
 source_bucket_name = 'alloy_exports_v161'
-destination_bucket_name = 'quip_airflow_dev'
+destination_bucket_name = 'quip_airflow'
 gcs_bucket = gcs_client.get_bucket(destination_bucket_name)
 
 # Get list of unprocessed csv files
@@ -32,7 +32,7 @@ df = airbud.load_csv_to_df('tmp/' + source_file_name)
 # Generate the destination blob name
 filename_no_file_type = source_file_name.split(".")[0]
 
-dag_run_date = str(pd.to_datetime('2025-02-20'))
+dag_run_date = str(pd.to_datetime('2025-02-25'))
 json_filename = f'get/{dataset}/{endpoint}/DAG_RUN:{dag_run_date}/{filename_no_file_type}.json'
 
 # Clean the column names and convert to JSON
@@ -41,7 +41,7 @@ records = airbud.clean_column_names(df, json_filename, dag_run_date)
 # Upload the JSON data to GCS
 airbud.upload_json_to_gcs(gcs_bucket, json_filename, records)
 
-
+#
 # 2. Insert the records to BigQuery
 if len(records) > 0:
 	try:
@@ -59,3 +59,9 @@ if len(records) > 0:
 	except Exception as e:
 		log.error(f"Error uploading {source_file_name} to BigQuery: {e}")
 		bad_files.append(source_file_name)
+
+
+df = pd.DataFrame(records)
+df.dtypes
+df.Day.min()
+df.Day.max()

@@ -47,8 +47,9 @@ def load_csv_to_df(csv_file: str) -> pd.DataFrame:
 
 def clean_column_names(
     df: pd.DataFrame, # DataFrame to clean
-    json_file_path: str, # Name of the csv GCS file
+    json_file_path: str, # Name of the GCS json file
     dag_run_date: str, # Date of the DAG run
+    is_camelcase: bool = False # Convert camelCase to snake_case
     ) -> List[Dict]: # Returns csv as json records
     """Clean column names and convert CSV to JSON records."""
     
@@ -57,6 +58,9 @@ def clean_column_names(
         cleaned_columns = []
         
         for col in df.columns:
+            if is_camelcase:
+                # Convert camelCase to snake_case
+                cleaned_col = re.sub(r'([a-z])([A-Z])', r'\1_\2', col)
             # Convert to lowercase
             cleaned_col = col.lower()
             # Replace spaces with underscores

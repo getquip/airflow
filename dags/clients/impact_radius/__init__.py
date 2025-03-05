@@ -16,24 +16,21 @@ from custom_packages import airbud
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger(__name__)
 
-class GetRecharge(airbud.GetClient):
+class GetImactRadius(airbud.GetClient):
     def __init__(self, project_id: str, bucket_name: str):
         # Define client's dataset name
-        self.dataset = "recharge"
+        self.dataset = "impact_radius"
 
         # Initialize the parent class
         super().__init__(project_id, bucket_name, self.dataset) 
 
-        # Get Recharge API credentials
-        api_key = airbud.get_secrets(self.project_id, self.dataset, prefix="api__")
-        self.headers = {
-            "X-Recharge-Access-Token": api_key['api_key'],
-            "X-Recharge-Version": "2021-11",
-        }
-        self.base_url = "https://api.rechargeapps.com/"
+        # Get API credentials
+        response = airbud.get_secrets(self.project_id, self.dataset, prefix="api__")
+        self.headers = {"Accept": "application/json"}
+        self.base_url = f"https://api.impact.com/Advertisers/{response.accountsid}/"
 
         # Initialize BigQuery tables if they doesn't exist
-        self.endpoints = self.load_endpoints(f"{ self.dataset }/endpoints.json")
+        self.endpoints = self.load_endpoints(f"{self.dataset}/endpoints.json")
         self.schemas = self.load_endpoint_schemas(self.dataset, self.endpoints.keys())
         self.generate_bq_tables()
 
@@ -43,11 +40,9 @@ class GetRecharge(airbud.GetClient):
         endpoint_kwargs: dict,  # Endpoint-specific arguments
         **kwargs,
     ) -> List[Dict]:
-        # API Documentation: https://developer.rechargepayments.com/2021-11/cursor_pagination
 
         # Set response limit to 250 (default is 50)
         params = endpoint_kwargs.get("params", {})
-        params["limit"] = 250
 
         # Get last bookmark, None if no bookmark
         last_ts = airbud.get_last_page_from_last_dag_run(f"{self.dataset}__{endpoint}")
@@ -145,7 +140,7 @@ class GetRecharge(airbud.GetClient):
             json_filename, dag_run_date = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
             airbud.upload_json_to_gcs(self.gcs_bucket, json_filename, records)
             return "success"
-        elif next_page:
+        else:
             # Store bookmark for next run
             airbud.store_next_page_across_dags(self.dataset, endpoint, next_page)
             return f"No records to upload."
