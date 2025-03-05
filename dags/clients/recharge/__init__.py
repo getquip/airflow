@@ -145,7 +145,7 @@ class GetRecharge(airbud.GetClient):
             json_filename, dag_run_date = airbud.generate_json_blob_name(self.dataset, endpoint, **kwargs)
             airbud.upload_json_to_gcs(self.gcs_bucket, json_filename, records)
             return "success"
-        else:
+        elif next_page:
             # Store bookmark for next run
             airbud.store_next_page_across_dags(self.dataset, endpoint, next_page)
             return f"No records to upload."
